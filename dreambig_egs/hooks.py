@@ -67,7 +67,7 @@ app_license = "mit"
 # ----------
 
 # application home page (will override Website Settings)
-# home_page = "login"
+home_page = "index"
 
 # website user home page (by Role)
 # role_home_page = {
@@ -161,6 +161,7 @@ app_license = "mit"
 
 doc_events = {
 	"EGS Check-in Log": {
+		"before_insert": "dreambig_egs.dreambig_egs.doctype.egs_check_in_log.egs_check_in_log.before_insert",
 		"after_insert": "dreambig_egs.dreambig_egs.doctype.egs_check_in_log.egs_check_in_log.after_insert"
 	}
 }

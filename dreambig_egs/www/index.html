@@ -1,0 +1,343 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("EGS Portal Home | Early Goal Setting: DREAM BIG") }}{% endblock %}
+
+{% block page_content %}
+<div class="egs-landing-wrapper">
+	<!-- Hero Banner -->
+	<header class="egs-hero text-center text-white">
+		<div class="container py-5">
+			<div class="row justify-content-center">
+				<div class="col-lg-10 col-xl-8">
+					<div class="d-inline-flex align-items-center gap-2 egs-pill-badge mb-3">
+						<span class="egs-pulse-dot"></span>
+						<span>{{ _("DREAM BIG Early Goal Setting (EGS)") }}</span>
+					</div>
+					<h1 class="display-4 fw-bold mb-3 tracking-tight">
+						{{ _("Early Goal Setting: DREAM BIG") }}
+					</h1>
+					<p class="lead fw-medium text-blue-100 mb-4 px-md-4">
+						<em>&ldquo;{{ _("No student should be left unguided and no one should be left behind") }}&rdquo;</em>
+					</p>
+					<p class="text-blue-200 small mb-0 max-w-600 mx-auto">
+						{{ _("Empowering first-year university students to discover career pathways, stay accountable with regular check-ins, and achieve their highest aspirations.") }}
+					</p>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<!-- Main Navigation Tiles Section -->
+	<section class="egs-portal-section py-5">
+		<div class="container">
+			<div class="text-center mb-5">
+				<h2 class="h3 fw-bold text-slate-800 mb-2">{{ _("Student & Coordinator Portals") }}</h2>
+				<p class="text-muted small mb-0">{{ _("Select your action step below to register, submit updates, or manage student escalations.") }}</p>
+			</div>
+
+			<div class="row g-4 justify-content-center">
+				<!-- Tile 1: Student Registration (Public Capture) -->
+				<div class="col-12 col-md-6 col-lg-6">
+					<div class="card h-100 egs-card egs-card-public border-0 shadow-sm position-relative overflow-hidden">
+						<div class="card-body p-4 d-flex flex-column">
+							<div class="d-flex align-items-center justify-content-between mb-3">
+								<div class="egs-icon-box bg-emerald-subtle text-emerald">
+									<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+										<circle cx="9" cy="7" r="4"></circle>
+										<path d="M19 8v6"></path>
+										<path d="M22 11h-6"></path>
+									</svg>
+								</div>
+								<span class="badge egs-badge egs-badge-public">
+									<span class="badge-dot bg-success me-1"></span>
+									{{ _("Public Access") }}
+								</span>
+							</div>
+							<h3 class="h5 fw-bold text-slate-800 mb-2">
+								<a href="/egs-student-participant" class="stretched-link text-decoration-none text-slate-800">
+									{{ _("Student Registration") }}
+								</a>
+							</h3>
+							<p class="text-muted small flex-grow-1 mb-4">
+								{{ _("Register your academic background, city, institution, guardian contact information, and top 5 career goals.") }}
+							</p>
+							<div class="d-flex align-items-center text-emerald fw-semibold small mt-auto">
+								<span>{{ _("Register Now") }}</span>
+								<svg class="ms-1 egs-arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<line x1="5" y1="12" x2="19" y2="12"></line>
+									<polyline points="12 5 19 12 12 19"></polyline>
+								</svg>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Tile 2: Progress Check-in (Public Check-in) -->
+				<div class="col-12 col-md-6 col-lg-6">
+					<div class="card h-100 egs-card egs-card-checkin border-0 shadow-sm position-relative overflow-hidden">
+						<div class="card-body p-4 d-flex flex-column">
+							<div class="d-flex align-items-center justify-content-between mb-3">
+								<div class="egs-icon-box bg-blue-subtle text-primary">
+									<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M9 11l3 3L22 4"></path>
+										<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+									</svg>
+								</div>
+								<span class="badge egs-badge egs-badge-public">
+									<span class="badge-dot bg-primary me-1"></span>
+									{{ _("Public Access") }}
+								</span>
+							</div>
+							<h3 class="h5 fw-bold text-slate-800 mb-2">
+								<a href="/egs-check-in-log" class="stretched-link text-decoration-none text-slate-800">
+									{{ _("Progress Check-in") }}
+								</a>
+							</h3>
+							<p class="text-muted small flex-grow-1 mb-4">
+								{{ _("Submit periodic goal updates with your registered phone number, track status, report roadblocks, and define your next dated action.") }}
+							</p>
+							<div class="d-flex align-items-center text-primary fw-semibold small mt-auto">
+								<span>{{ _("Submit Check-in") }}</span>
+								<svg class="ms-1 egs-arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<line x1="5" y1="12" x2="19" y2="12"></line>
+									<polyline points="12 5 19 12 12 19"></polyline>
+								</svg>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Tile 3: DECIDE: A Promise to Self (Secure Decide Stage) -->
+				<div class="col-12 col-md-6 col-lg-6">
+					<div class="card h-100 egs-card egs-card-secure border-0 shadow-sm position-relative overflow-hidden">
+						<div class="card-body p-4 d-flex flex-column">
+							<div class="d-flex align-items-center justify-content-between mb-3">
+								<div class="egs-icon-box bg-amber-subtle text-amber">
+									<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+									</svg>
+								</div>
+								<span class="badge egs-badge egs-badge-secure">
+									<svg class="me-1" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+										<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+									</svg>
+									{{ _("Student Login") }}
+								</span>
+							</div>
+							<h3 class="h5 fw-bold text-slate-800 mb-2">
+								<a href="/egs-decide-stage" class="stretched-link text-decoration-none text-slate-800">
+									{{ _("DECIDE: A Promise to Self") }}
+								</a>
+							</h3>
+							<p class="text-muted small flex-grow-1 mb-4">
+								{{ _("Following the 2-day flagship event, log in to record your final confirmed career goal, personal vision statement, and date of decision.") }}
+							</p>
+							<div class="d-flex align-items-center text-amber fw-semibold small mt-auto">
+								<span>{{ _("Commit Decision") }}</span>
+								<svg class="ms-1 egs-arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<line x1="5" y1="12" x2="19" y2="12"></line>
+									<polyline points="12 5 19 12 12 19"></polyline>
+								</svg>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Tile 4: Coordinator Exception Dashboard -->
+				<div class="col-12 col-md-6 col-lg-6">
+					<div class="card h-100 egs-card egs-card-admin border-0 shadow-sm position-relative overflow-hidden">
+						<div class="card-body p-4 d-flex flex-column">
+							<div class="d-flex align-items-center justify-content-between mb-3">
+								<div class="egs-icon-box bg-purple-subtle text-purple">
+									<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+										<path d="M9 12l2 2 4-4"></path>
+									</svg>
+								</div>
+								<span class="badge egs-badge egs-badge-admin">
+									<svg class="me-1" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
+										<path d="M12 6v6l4 2"></path>
+									</svg>
+									{{ _("Staff Only") }}
+								</span>
+							</div>
+							<h3 class="h5 fw-bold text-slate-800 mb-2">
+								<a href="/app/query-report/EGS Action Dashboard" class="stretched-link text-decoration-none text-slate-800">
+									{{ _("Coordinator Exception Dashboard") }}
+								</a>
+							</h3>
+							<p class="text-muted small flex-grow-1 mb-4">
+								{{ _("Access real-time analytics to monitor stuck or silent students, filter by university/college, and triage support tickets.") }}
+							</p>
+							<div class="d-flex align-items-center text-purple fw-semibold small mt-auto">
+								<span>{{ _("Launch Report") }}</span>
+								<svg class="ms-1 egs-arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<line x1="5" y1="12" x2="19" y2="12"></line>
+									<polyline points="12 5 19 12 12 19"></polyline>
+								</svg>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</div>
+
+<style>
+/* Base Colors & Typography */
+.egs-landing-wrapper {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	background-color: #f8fafc;
+	min-height: 100vh;
+}
+
+.text-slate-800 { color: #1e293b !important; }
+.text-blue-100 { color: #dbeafe !important; }
+.text-blue-200 { color: #bfdbfe !important; }
+.text-emerald { color: #059669 !important; }
+.bg-emerald-subtle { background-color: #ecfdf5 !important; }
+.text-amber { color: #d97706 !important; }
+.bg-amber-subtle { background-color: #fffbeb !important; }
+.text-purple { color: #7c3aed !important; }
+.bg-purple-subtle { background-color: #f5f3ff !important; }
+.bg-blue-subtle { background-color: #eff6ff !important; }
+
+/* Hero Banner */
+.egs-hero {
+	background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
+	padding: 4rem 1rem 3.5rem 1rem;
+	position: relative;
+	box-shadow: 0 4px 20px -2px rgba(30, 58, 138, 0.25);
+}
+
+.egs-pill-badge {
+	background: rgba(255, 255, 255, 0.15);
+	backdrop-filter: blur(8px);
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	padding: 0.35rem 1rem;
+	border-radius: 9999px;
+	font-size: 0.825rem;
+	font-weight: 600;
+	letter-spacing: 0.025em;
+	color: #ffffff;
+}
+
+.egs-pulse-dot {
+	width: 8px;
+	height: 8px;
+	background-color: #34d399;
+	border-radius: 50%;
+	display: inline-block;
+	box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+	animation: egs-pulse 2s infinite;
+}
+
+@keyframes egs-pulse {
+	0% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+	}
+	70% {
+		transform: scale(1);
+		box-shadow: 0 0 0 8px rgba(52, 211, 153, 0);
+	}
+	100% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+	}
+}
+
+.max-w-600 {
+	max-width: 620px;
+}
+
+/* Navigation Cards */
+.egs-card {
+	background: #ffffff;
+	border-radius: 14px;
+	transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+	border: 1px solid #e2e8f0 !important;
+}
+
+.egs-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+.egs-card-public:hover { border-color: #a7f3d0 !important; }
+.egs-card-checkin:hover { border-color: #bfdbfe !important; }
+.egs-card-secure:hover { border-color: #fde68a !important; }
+.egs-card-admin:hover { border-color: #ddd6fe !important; }
+
+.egs-icon-box {
+	width: 52px;
+	height: 52px;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+/* Badges */
+.egs-badge {
+	font-size: 0.75rem;
+	font-weight: 600;
+	padding: 0.35rem 0.75rem;
+	border-radius: 9999px;
+	display: inline-flex;
+	align-items: center;
+}
+
+.badge-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.egs-badge-public {
+	background-color: #ecfdf5;
+	color: #065f46;
+	border: 1px solid #a7f3d0;
+}
+
+.egs-badge-secure {
+	background-color: #fffbeb;
+	color: #92400e;
+	border: 1px solid #fde68a;
+}
+
+.egs-badge-admin {
+	background-color: #f5f3ff;
+	color: #5b21b6;
+	border: 1px solid #ddd6fe;
+}
+
+/* Arrow Interaction */
+.egs-arrow-icon {
+	transition: transform 0.2s ease-in-out;
+}
+
+.egs-card:hover .egs-arrow-icon {
+	transform: translateX(4px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.egs-hero {
+		padding: 2.75rem 1rem 2.25rem 1rem;
+	}
+	.egs-hero h1 {
+		font-size: 2rem;
+	}
+	.egs-card-body {
+		padding: 1.25rem !important;
+	}
+}
+</style>
+{% endblock %}

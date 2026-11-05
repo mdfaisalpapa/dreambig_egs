@@ -22,6 +22,12 @@
    "reqd": 1
   },
   {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "City"
+  },
+  {
    "fieldname": "parent_institution",
    "fieldtype": "Link",
    "label": "Parent Institution",
@@ -47,7 +53,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-31 20:39:00.000000",
+ "modified": "2026-11-05 08:40:00.000000",
  "modified_by": "Administrator",
  "module": "Dreambig Egs",
  "name": "EGS Institution",

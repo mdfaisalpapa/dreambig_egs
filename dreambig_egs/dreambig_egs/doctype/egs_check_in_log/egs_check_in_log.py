@@ -2,30 +2,27 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, now_datetime
 
 
 class EGSCheckInLog(Document):
 	def before_insert(self):
-		"""Set default values if submitted from Web Form."""
-		if not self.timestamp:
-			self.timestamp = now_datetime()
-		if not self.check_in_round:
-			last_round = (
-				frappe.db.get_value(
-					"EGS Check-in Log",
-					{"student_reference": self.student_reference},
-					"check_in_round",
-					order_by="check_in_round desc",
-				)
-				or 0
-			)
-			self.check_in_round = last_round + 1
+		"""Controller method triggered before document insertion."""
+		handle_before_insert(self)
 
 	def after_insert(self):
 		"""Controller method triggered after document insertion."""
 		handle_after_insert(self)
+
+
+def before_insert(doc, method=None):
+	"""
+	Hook function callable via Frappe doc_events.
+	Delegates to handle_before_insert.
+	"""
+	handle_before_insert(doc)
 
 
 def after_insert(doc, method=None):
@@ -36,6 +33,57 @@ def after_insert(doc, method=None):
 	handle_after_insert(doc)
 
 
+def handle_before_insert(doc):
+	"""
+	Handles logic before an EGS Check-in Log is inserted:
+	1. If lookup_mobile_number is provided (e.g. from Web Form submission),
+	   uses frappe.db.get_value to find the matching EGS Student Participant by phone_number
+	   and populates the hidden student_reference field with their STU- ID.
+	2. Ensures timestamp is populated.
+	3. Automatically calculates next check_in_round if not provided.
+	"""
+	if getattr(doc.flags, "_before_insert_processed", False):
+		return
+	doc.flags._before_insert_processed = True
+
+	lookup_number = getattr(doc, "lookup_mobile_number", None) or doc.get("lookup_mobile_number")
+
+	if lookup_number and not doc.student_reference:
+		clean_lookup = str(lookup_number).strip()
+
+		# Query matching EGS Student Participant by unique phone_number
+		student_id = frappe.db.get_value(
+			"EGS Student Participant",
+			{"phone_number": clean_lookup},
+			"name",
+		)
+
+		if student_id:
+			doc.student_reference = student_id
+		else:
+			frappe.throw(
+				_("No registered student found with phone number {0}. Please ensure you are registered.").format(
+					clean_lookup
+				),
+				title=_("Student Not Found"),
+			)
+
+	if not doc.timestamp:
+		doc.timestamp = now_datetime()
+
+	if not doc.check_in_round and doc.student_reference:
+		last_round = (
+			frappe.db.get_value(
+				"EGS Check-in Log",
+				{"student_reference": doc.student_reference},
+				"check_in_round",
+				order_by="check_in_round desc",
+			)
+			or 0
+		)
+		doc.check_in_round = last_round + 1
+
+
 def handle_after_insert(doc):
 	"""
 	Handles logic when an EGS Check-in Log is inserted:
@@ -44,8 +92,6 @@ def handle_after_insert(doc):
 	2. Creates an EGS Escalation Ticket (and a ToDo) assigned to the Teacher-Mentor
 	   (Designated Anchor) linked to the student's university_college.
 	"""
-	# Idempotency guard to prevent duplicate executions if both controller method
-	# and doc_events hook trigger
 	if getattr(doc.flags, "_after_insert_processed", False):
 		return
 	doc.flags._after_insert_processed = True
@@ -73,7 +119,7 @@ def handle_after_insert(doc):
 				"designated_anchor",
 			)
 
-		# Check for a coordinator linked to the institution
+		# Check for an EGS Coordinator linked to the institution
 		coordinator = None
 		if university_college:
 			coordinator = frappe.db.get_value(

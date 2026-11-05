@@ -14,17 +14,31 @@
   },
   {
    "fieldname": "phone_number",
-   "fieldtype": "Phone",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Phone Number",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "student_email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Student Email",
+   "options": "Email",
+   "unique": 1
+  },
+  {
+   "fieldname": "email_otp",
+   "fieldtype": "Data",
+   "label": "Email OTP"
   },
   {
    "fieldname": "university_college",
    "fieldtype": "Link",
-   "options": "EGS Institution",
    "in_list_view": 1,
-   "label": "University/College"
+   "label": "University/College",
+   "options": "EGS Institution"
   },
   {
    "fieldname": "faculty_department",
@@ -70,11 +84,32 @@
    "fieldtype": "Table",
    "label": "Top 5 Choice Career Goals",
    "options": "EGS Student Career Choice"
+  },
+  {
+   "fieldname": "decide_stage_section",
+   "fieldtype": "Section Break",
+   "label": "DECIDE Stage: A Promise to Self"
+  },
+  {
+   "fieldname": "final_chosen_career_goal",
+   "fieldtype": "Link",
+   "label": "Final Chosen Career Goal",
+   "options": "EGS Student Career Choice"
+  },
+  {
+   "fieldname": "personal_vision_statement",
+   "fieldtype": "Small Text",
+   "label": "Personal Vision Statement"
+  },
+  {
+   "fieldname": "date_of_decision",
+   "fieldtype": "Date",
+   "label": "Date of Decision"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-31 20:39:00.000000",
+ "modified": "2026-11-05 08:40:00.000000",
  "modified_by": "Administrator",
  "module": "Dreambig Egs",
  "name": "EGS Student Participant",
