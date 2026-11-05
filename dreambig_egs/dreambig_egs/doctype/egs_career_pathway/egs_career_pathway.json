@@ -1,0 +1,63 @@
+{
+ "creation": "2026-10-31 21:35:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "career_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Career Title",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "domain",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Domain",
+   "options": "Academia\nJudiciary\nService/Civil\nBusiness/Entrepreneurship\nDefence\nInnovation/Science\nOther"
+  },
+  {
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "label": "Active Catalog Item",
+   "default": "1"
+  },
+  {
+   "fieldname": "education_requirements",
+   "fieldtype": "Text Editor",
+   "label": "Education & Requirements"
+  },
+  {
+   "fieldname": "standard_preparation_timeline",
+   "fieldtype": "Text Editor",
+   "label": "Standard Preparation & Milestones"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-31 21:35:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Career Pathway",
+ "naming_rule": "By fieldname",
+ "autoname": "field:career_title",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ]
+}

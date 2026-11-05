@@ -1,0 +1,72 @@
+{
+ "creation": "2026-10-31 20:39:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "recipient_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Recipient Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "recipient_role",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Recipient Role",
+   "options": "Student\nVolunteer\nFaculty/Coordinator",
+   "reqd": 1
+  },
+  {
+   "fieldname": "event_reference",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Event Reference",
+   "options": "EGS Event",
+   "reqd": 1
+  },
+  {
+   "fieldname": "certificate_type",
+   "fieldtype": "Select",
+   "label": "Certificate Type",
+   "options": "Participation\nVoluntary Service\nProfessional Contribution",
+   "reqd": 1
+  },
+  {
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-31 20:39:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Certificate Record",
+ "naming_rule": "Expression",
+ "autoname": "format:CERT-{YY}-{####}",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

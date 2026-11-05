@@ -1,0 +1,81 @@
+{
+ "creation": "2026-10-31 21:05:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "student_reference",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Student Reference",
+   "options": "EGS Student Participant",
+   "reqd": 1
+  },
+  {
+   "fieldname": "check_in_round",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Check-in Round",
+   "reqd": 1
+  },
+  {
+   "fieldname": "timestamp",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Timestamp",
+   "reqd": 1
+  },
+  {
+   "fieldname": "triage_route",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Triage Route",
+   "options": "On track\nStuck\nSilent"
+  },
+  {
+   "fieldname": "response_section",
+   "fieldtype": "Section Break",
+   "label": "Bot Responses"
+  },
+  {
+   "fieldname": "student_response",
+   "fieldtype": "Select",
+   "label": "Student Response",
+   "options": "Yes decided\nStill deciding\nI need help"
+  },
+  {
+   "fieldname": "next_dated_action",
+   "fieldtype": "Data",
+   "label": "Next Dated Action"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-31 21:05:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Check-in Log",
+ "naming_rule": "Expression",
+ "autoname": "format:LOG-{YY}-{####}",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

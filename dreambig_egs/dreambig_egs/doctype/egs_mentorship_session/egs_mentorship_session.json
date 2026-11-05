@@ -1,0 +1,65 @@
+{
+ "creation": "2026-10-31 21:35:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "match_reference",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Match Reference",
+   "options": "EGS Mentorship Match",
+   "reqd": 1
+  },
+  {
+   "fieldname": "session_date",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Session Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Scheduled\nCompleted\nCancelled",
+   "default": "Scheduled"
+  },
+  {
+   "fieldname": "mentor_brief",
+   "fieldtype": "Text Editor",
+   "label": "Mentor Brief (Pre-Session Summary)"
+  },
+  {
+   "fieldname": "session_notes",
+   "fieldtype": "Small Text",
+   "label": "Session Notes & Decisions"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-31 21:35:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Mentorship Session",
+ "naming_rule": "Expression",
+ "autoname": "format:SESS-{YY}-{####}",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ]
+}

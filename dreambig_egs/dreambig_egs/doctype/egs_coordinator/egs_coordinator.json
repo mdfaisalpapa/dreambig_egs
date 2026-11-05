@@ -1,0 +1,83 @@
+{
+ "creation": "2026-10-31 20:50:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Full Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Coordinator Role",
+   "options": "Chief Coordinator\nCollege/Group Coordinator\nFaculty/Department Coordinator\nHostel/Hall Coordinator\nDREAM BIG Career (DBC) Coordinator\nStudent Volunteer\nCohort Captain",
+   "reqd": 1
+  },
+  {
+   "fieldname": "institution",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Linked Institution",
+   "options": "EGS Institution",
+   "reqd": 1,
+   "description": "The University, College, or Department this coordinator is responsible for."
+  },
+  {
+   "fieldname": "contact_section",
+   "fieldtype": "Section Break",
+   "label": "Contact & System Details"
+  },
+  {
+   "fieldname": "phone_number",
+   "fieldtype": "Phone",
+   "label": "Phone Number"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "options": "Email",
+   "label": "Email Address"
+  },
+  {
+   "fieldname": "erpnext_user",
+   "fieldtype": "Link",
+   "label": "Linked System User",
+   "options": "User",
+   "description": "Optional: Link to a Frappe User account if they require login access to the system or chatbot backend."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-31 20:50:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Coordinator",
+ "naming_rule": "Expression",
+ "autoname": "format:COORD-{YY}-{####}",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

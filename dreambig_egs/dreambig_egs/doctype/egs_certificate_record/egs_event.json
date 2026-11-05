@@ -1,0 +1,77 @@
+{
+ "creation": "2026-10-31 20:39:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "event_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Event Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "event_date",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Event Date & Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "venue",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Venue"
+  },
+  {
+   "fieldname": "chief_coordinator",
+   "fieldtype": "Link",
+   "label": "Chief Coordinator",
+   "options": "User"
+  },
+  {
+   "fieldname": "principal_dean",
+   "fieldtype": "Data",
+   "label": "Principal/Dean"
+  },
+  {
+   "fieldname": "target_student_registration",
+   "fieldtype": "Int",
+   "label": "Target Student Registration"
+  },
+  {
+   "fieldname": "target_actual_participation",
+   "fieldtype": "Int",
+   "label": "Target Actual Participation"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-31 20:39:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Event",
+ "naming_rule": "Expression",
+ "autoname": "format:EGS-EVT-{YYYY}-{MM}-{####}",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

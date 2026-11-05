@@ -1,0 +1,70 @@
+{
+ "creation": "2026-10-31 21:50:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "student_reference",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Student Reference",
+   "options": "EGS Student Participant",
+   "reqd": 1
+  },
+  {
+   "fieldname": "accomplishment_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Accomplishment Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "date_achieved",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date Achieved",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Category",
+   "options": "Exam\nInternship\nProject\nQualification\nOther"
+  },
+  {
+   "fieldname": "evidence",
+   "fieldtype": "Attach",
+   "label": "Evidence / Certificate"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-31 21:50:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Accomplishment",
+ "naming_rule": "Expression",
+ "autoname": "format:ACC-{YY}-{####}",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

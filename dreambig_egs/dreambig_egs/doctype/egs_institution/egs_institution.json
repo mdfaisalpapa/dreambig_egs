@@ -1,0 +1,75 @@
+{
+ "creation": "2026-10-31 20:39:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "institution_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Institution Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "institution_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Institution Type",
+   "options": "University\nCollege\nFaculty\nDepartment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "parent_institution",
+   "fieldtype": "Link",
+   "label": "Parent Institution",
+   "options": "EGS Institution",
+   "description": "If this is a Department or College, link it to the main University here."
+  },
+  {
+   "fieldname": "contact_details_section",
+   "fieldtype": "Section Break",
+   "label": "Contact Details"
+  },
+  {
+   "fieldname": "principal_dean_name",
+   "fieldtype": "Data",
+   "label": "Principal / Dean Name"
+  },
+  {
+   "fieldname": "designated_anchor",
+   "fieldtype": "Link",
+   "label": "Designated Teacher-Mentor (Anchor)",
+   "options": "EGS Mentor Profile"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-31 20:39:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Institution",
+ "naming_rule": "By fieldname",
+ "autoname": "field:institution_name",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,95 @@
+{
+ "creation": "2026-10-31 20:39:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "event_reference",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Event Reference",
+   "options": "EGS Event",
+   "reqd": 1
+  },
+  {
+   "fieldname": "feedback_provider",
+   "fieldtype": "Link",
+   "label": "Feedback Provider (Student)",
+   "options": "EGS Student Participant"
+  },
+  {
+   "fieldname": "ratings_section",
+   "fieldtype": "Section Break",
+   "label": "Ratings (Out of 5)"
+  },
+  {
+   "fieldname": "star_speakers_rating",
+   "fieldtype": "Rating",
+   "label": "Star Speakers Rating"
+  },
+  {
+   "fieldname": "registration_process_rating",
+   "fieldtype": "Rating",
+   "label": "Registration Process Rating"
+  },
+  {
+   "fieldname": "information_brochure_rating",
+   "fieldtype": "Rating",
+   "label": "Information Brochure Rating"
+  },
+  {
+   "fieldname": "time_management_rating",
+   "fieldtype": "Rating",
+   "label": "Time Management Rating"
+  },
+  {
+   "fieldname": "venue_management_rating",
+   "fieldtype": "Rating",
+   "label": "Venue Management and Hospitality Rating"
+  },
+  {
+   "fieldname": "remarks_section",
+   "fieldtype": "Section Break",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "positive_remarks",
+   "fieldtype": "Small Text",
+   "label": "Positive Remarks"
+  },
+  {
+   "fieldname": "suggestions_for_improvement",
+   "fieldtype": "Small Text",
+   "label": "Suggestions for Improvement"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-31 20:39:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Event Feedback",
+ "naming_rule": "Expression",
+ "autoname": "format:FB-{YYYY}-{MM}-{####}",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

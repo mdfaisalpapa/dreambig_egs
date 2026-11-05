@@ -159,34 +159,20 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"EGS Check-in Log": {
+		"after_insert": "dreambig_egs.dreambig_egs.doctype.egs_check_in_log.egs_check_in_log.after_insert"
+	}
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"dreambig_egs.tasks.all"
-# 	],
-# 	"daily": [
-# 		"dreambig_egs.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"dreambig_egs.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"dreambig_egs.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"dreambig_egs.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"daily": [
+		"dreambig_egs.dreambig_egs.doctype.egs_check_in_log.egs_check_in_log.check_silent_students"
+	]
+}
 
 # Testing
 # -------
