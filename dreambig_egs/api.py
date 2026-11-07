@@ -89,7 +89,7 @@ def get_registration_url():
 	"""
 	Returns the full Web Form registration URL using Frappe site configuration host_name / get_url().
 	"""
-	from dreambig_egs.bot_engine.api import get_registration_url as _get_registration_url
+	from dreambig_egs.dreambig_egs.bot_engine.api import get_registration_url as _get_registration_url
 
 	return _get_registration_url()
 
@@ -100,7 +100,7 @@ def bot_webhook(platform="telegram", **kwargs):
 	Universal webhook router for platform-agnostic bot messaging (Telegram, WhatsApp, etc.).
 	Delegates to dreambig_egs.bot_engine.api.bot_webhook.
 	"""
-	from dreambig_egs.bot_engine.api import bot_webhook as _bot_webhook
+	from dreambig_egs.dreambig_egs.bot_engine.api import bot_webhook as _bot_webhook
 
 	return _bot_webhook(platform=platform, **kwargs)
 
