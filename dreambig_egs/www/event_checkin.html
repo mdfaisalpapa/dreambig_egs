@@ -1,0 +1,120 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container my-5" style="max-width: 520px;">
+    {% if auto_checkin %}
+    <div class="card shadow-sm border-0 text-center p-5 bg-white" style="border-radius: 14px;">
+        <div class="mb-3">
+            <span style="font-size: 3.5rem;">✅</span>
+        </div>
+        <h3 class="font-weight-bold text-success mb-2">{{ _("Check-In Successful!") }}</h3>
+        <p class="text-muted mb-4">
+            Welcome, <b>{{ student_name }}</b>! You are checked in for the physical event. Redirecting to your dashboard...
+        </p>
+        <div class="spinner-border text-primary my-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="mt-4">
+            <a href="{{ redirect_url }}" class="btn btn-primary font-weight-bold px-4 py-2" style="border-radius: 8px;">
+                {{ _("Open My Dashboard Now") }}
+            </a>
+        </div>
+    </div>
+    <script>
+        setTimeout(function() {
+            window.location.href = "{{ redirect_url }}";
+        }, 1200);
+    </script>
+    {% else %}
+    <div class="card shadow-sm border-0 p-4 p-md-5 bg-white" style="border-radius: 14px;">
+        <div class="text-center mb-4">
+            <div class="mb-2">
+                <span style="font-size: 3rem;">📍</span>
+            </div>
+            <h3 class="font-weight-bold text-dark mb-1">{{ _("Event Check-In") }}</h3>
+            <p class="text-muted" style="font-size: 0.95rem;">
+                Welcome to <b>EARLY GOAL SETTING: DREAM BIG</b>! Check in to unlock Exercise 2 and select your 5 DREAM BIG Career Goals.
+            </p>
+        </div>
+
+        <form id="checkin-form" onsubmit="handle_event_checkin(event)">
+            <div class="mb-3">
+                <label for="checkin_input" class="form-label font-weight-bold text-dark">{{ _("Registered Student Email") }}</label>
+                <input type="email" class="form-control form-control-lg" id="checkin_input" placeholder="name@example.com" required style="font-size: 1rem;">
+                <div class="form-text text-muted" style="font-size: 0.85rem;">
+                    {{ _("Or scan the personalized QR code from your welcome email.") }}
+                </div>
+            </div>
+
+            <div id="checkin-alert" class="alert d-none mb-3 py-2" role="alert"></div>
+
+            <button type="submit" id="btn-checkin" class="btn btn-primary btn-lg w-100 font-weight-bold" style="border-radius: 8px;">
+                {{ _("Check In to Event") }}
+            </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top">
+            <small class="text-muted">
+                {{ _("Haven't registered yet?") }} <a href="/egs-student-participant/new" class="text-primary font-weight-bold">{{ _("Register here") }}</a>
+            </small>
+        </div>
+    </div>
+
+    <script>
+    // Check if ID and Key are in query params on client-side
+    (function check_url_credentials() {
+        const params = new URLSearchParams(window.location.search);
+        const sId = params.get('id');
+        const token = params.get('key');
+        if (sId && token) {
+            frappe.call({
+                method: "dreambig_egs.dreambig_egs.doctype.egs_student_participant.egs_student_participant.event_checkin",
+                args: { student_id: sId, token: token },
+                callback: function(r) {
+                    window.location.href = "/my-dream-big?id=" + encodeURIComponent(sId) + "&key=" + encodeURIComponent(token);
+                }
+            });
+        }
+    })();
+
+    function handle_event_checkin(e) {
+        e.preventDefault();
+        var email = document.getElementById('checkin_input').value.trim();
+        var alertBox = document.getElementById('checkin-alert');
+        var btn = document.getElementById('btn-checkin');
+
+        if (!email) return;
+
+        btn.disabled = true;
+        btn.innerText = '{{ _("Checking in...") }}';
+        alertBox.className = 'alert d-none mb-3 py-2';
+
+        frappe.call({
+            method: 'dreambig_egs.dreambig_egs.doctype.egs_student_participant.egs_student_participant.event_checkin_by_email',
+            args: { email: email },
+            callback: function(r) {
+                if (r.message && r.message.status === 'success') {
+                    alertBox.className = 'alert alert-success mb-3 py-2 text-center';
+                    alertBox.innerText = '{{ _("Checked in successfully! Redirecting...") }}';
+                    setTimeout(function() {
+                        window.location.href = r.message.redirect_url;
+                    }, 800);
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = '{{ _("Check In to Event") }}';
+                    alertBox.className = 'alert alert-danger mb-3 py-2 text-center';
+                    alertBox.innerText = r.message ? r.message.message : '{{ _("Check-in failed. Please check your email.") }}';
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerText = '{{ _("Check In to Event") }}';
+                alertBox.className = 'alert alert-danger mb-3 py-2 text-center';
+                alertBox.innerText = '{{ _("Connection error. Please try again.") }}';
+            }
+        });
+    }
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

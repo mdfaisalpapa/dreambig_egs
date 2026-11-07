@@ -6,61 +6,78 @@
  "engine": "InnoDB",
  "fields": [
   {
-   "fieldname": "full_name",
+   "fieldname": "coordinator_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Full Name",
-   "reqd": 1
+   "label": "Coordinator Name",
+   "reqd": 1,
+   "unique": 1
   },
   {
+   "default": "Coordinator",
    "fieldname": "role",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Coordinator Role",
-   "options": "Chief Coordinator\nCollege/Group Coordinator\nFaculty/Department Coordinator\nHostel/Hall Coordinator\nDREAM BIG Career (DBC) Coordinator\nStudent Volunteer\nCohort Captain",
+   "label": "Role",
+   "options": "Chief Patron\nPatron\nAdvisor\nChief Coordinator\nCoordinator",
+   "reqd": 1
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "City",
    "reqd": 1
   },
   {
    "fieldname": "institution",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Linked Institution",
+   "label": "Institution",
    "options": "EGS Institution",
-   "reqd": 1,
-   "description": "The University, College, or Department this coordinator is responsible for."
+   "reqd": 0
   },
   {
-   "fieldname": "contact_section",
+   "fieldname": "designation",
+   "fieldtype": "Small Text",
+   "label": "Designation"
+  },
+  {
+   "fieldname": "contact_number",
+   "fieldtype": "Data",
+   "label": "Contact Number"
+  },
+  {
+   "fieldname": "system_section",
    "fieldtype": "Section Break",
-   "label": "Contact & System Details"
+   "label": "System Integration"
   },
   {
-   "fieldname": "phone_number",
-   "fieldtype": "Phone",
-   "label": "Phone Number"
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name"
   },
   {
    "fieldname": "email",
    "fieldtype": "Data",
-   "options": "Email",
-   "label": "Email Address"
+   "label": "Email Address",
+   "options": "Email"
   },
   {
    "fieldname": "erpnext_user",
    "fieldtype": "Link",
    "label": "Linked System User",
-   "options": "User",
-   "description": "Optional: Link to a Frappe User account if they require login access to the system or chatbot backend."
+   "options": "User"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-31 20:50:00.000000",
+ "modified": "2026-11-05 19:00:00.000000",
  "modified_by": "Administrator",
  "module": "Dreambig Egs",
  "name": "EGS Coordinator",
- "naming_rule": "Expression",
- "autoname": "format:COORD-{YY}-{####}",
+ "naming_rule": "By fieldname",
+ "autoname": "field:coordinator_name",
  "owner": "Administrator",
  "permissions": [
   {

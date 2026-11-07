@@ -5,6 +5,12 @@ app_description = "Dream Big Early Goal Setting - No student should be left ungu
 app_email = "mdfaisalpapa@gmail.com"
 app_license = "mit"
 
+website_route_rules = [
+	{"from_route": "/my-dream-big", "to_route": "my_dream_big"},
+	{"from_route": "/recover-link", "to_route": "recover_link"},
+	{"from_route": "/event-checkin", "to_route": "event_checkin"},
+]
+
 # Apps
 # ------------------
 

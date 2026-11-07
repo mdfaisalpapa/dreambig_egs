@@ -32,7 +32,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Progress Status",
-   "options": "Pending\nProgress Made\nCompleted\nStalled",
+   "options": "Pending\nIn Progress\nProgress Made\nCompleted\nStalled",
    "default": "Pending"
   },
   {

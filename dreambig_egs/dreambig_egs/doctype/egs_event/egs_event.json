@@ -1,9 +1,24 @@
 {
- "creation": "2026-10-31 20:39:00.000000",
- "custom": 0,
+ "actions": [],
+ "autoname": "format:EGS-EVT-{YYYY}-{MM}-{####}",
+ "creation": "2026-10-31 20:39:00",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
+ "field_order": [
+  "event_name",
+  "event_date",
+  "city",
+  "venue",
+  "status",
+  "registration_deadline",
+  "allow_digital_checkins",
+  "allow_digital_food_coupons",
+  "chief_coordinator",
+  "principal_dean",
+  "target_student_registration",
+  "target_actual_participation"
+ ],
  "fields": [
   {
    "fieldname": "event_name",
@@ -20,10 +35,44 @@
    "reqd": 1
   },
   {
+   "fieldname": "city",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "City",
+   "options": "Delhi\nHyderabad\nLucknow\nMumbai\nVijayawada\nAligarh\nKolkata\nChennai\nBengaluru\nKozhikode\nPune\nOnline"
+  },
+  {
    "fieldname": "venue",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Venue"
+  },
+  {
+   "default": "Planned",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Planned\nOpen for Registration\nRegistration Closed\nActive\nConducted",
+   "reqd": 1
+  },
+  {
+   "fieldname": "registration_deadline",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Registration Deadline"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_digital_checkins",
+   "fieldtype": "Check",
+   "label": "Allow Digital Check-ins"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_digital_food_coupons",
+   "fieldtype": "Check",
+   "label": "Allow Digital Food Coupons"
   },
   {
    "fieldname": "chief_coordinator",
@@ -49,12 +98,11 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-31 20:39:00.000000",
+ "modified": "2026-11-06 09:33:43.080013",
  "modified_by": "Administrator",
  "module": "Dreambig Egs",
  "name": "EGS Event",
- "naming_rule": "Expression",
- "autoname": "format:EGS-EVT-{YYYY}-{MM}-{####}",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -68,10 +116,22 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Guest"
+  },
+  {
+   "read": 1,
+   "role": "All"
   }
  ],
+ "row_format": "Dynamic",
+ "search_fields": "event_name,event_date,venue",
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
+ "title_field": "event_name",
  "track_changes": 1
 }

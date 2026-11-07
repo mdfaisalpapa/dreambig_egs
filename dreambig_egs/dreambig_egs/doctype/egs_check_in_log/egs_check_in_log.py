@@ -96,6 +96,37 @@ def handle_after_insert(doc):
 		return
 	doc.flags._after_insert_processed = True
 
+	# Hook into check-in process for digital check-ins and food coupons
+	if doc.student_reference:
+		try:
+			student_doc = frappe.get_doc("EGS Student Participant", doc.student_reference)
+			event = None
+			if student_doc.event:
+				event = frappe.get_doc("EGS Event", student_doc.event)
+
+			if event:
+				changed = False
+				if event.allow_digital_checkins and student_doc.event_status != "Checked-In":
+					student_doc.event_status = "Checked-In"
+					student_doc.physical_attendance = 1
+					if getattr(student_doc, "current_5ds_stage", None) in (None, "", "DREAM"):
+						student_doc.current_5ds_stage = "DISCOVER"
+					changed = True
+				if event.allow_digital_food_coupons and (
+					not student_doc.food_coupon_issued
+					or not getattr(student_doc, "food_coupon_code", None)
+				):
+					student_doc.food_coupon_issued = 1
+					student_doc.food_coupon_code = (
+						f"MEAL-{frappe.generate_hash(length=6).upper()}"
+					)
+					changed = True
+				if changed:
+					student_doc.save(ignore_permissions=True)
+					frappe.db.commit()
+		except Exception as e:
+			frappe.log_error(f"Error updating check-in and food coupon for {doc.student_reference}: {e}", "Checkin Log Hook")
+
 	if doc.student_response == "I need help":
 		# Set the triage_route field on the current log to 'Stuck' and call .db_update()
 		doc.triage_route = "Stuck"

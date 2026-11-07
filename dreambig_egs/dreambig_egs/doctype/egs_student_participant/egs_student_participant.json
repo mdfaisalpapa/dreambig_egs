@@ -1,10 +1,67 @@
 {
- "creation": "2026-10-31 20:39:00.000000",
- "custom": 0,
+ "actions": [],
+ "autoname": "format:STU-{YY}-{####}",
+ "creation": "2026-10-31 20:39:00",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
+ "field_order": [
+  "first_year_notice",
+  "student_name",
+  "phone_number",
+  "student_email",
+  "access_token",
+  "guardian_phone_number",
+  "city",
+  "university_college",
+  "event",
+  "faculty_department",
+  "course",
+  "cohort_year",
+  "attendance_section",
+  "event_status",
+  "food_coupon_issued",
+  "food_coupon_code",
+  "career_goals_section",
+  "html_employee_cat",
+  "path_emp_govt_public",
+  "path_emp_govt_reg",
+  "path_emp_finance",
+  "path_emp_scientific",
+  "path_emp_academic",
+  "path_emp_inventions",
+  "path_emp_prof_biz",
+  "path_emp_arts_sports",
+  "path_emp_religious",
+  "path_emp_political",
+  "path_emp_un_global",
+  "career_goals_col_break",
+  "html_employer_cat",
+  "path_biz_institution",
+  "path_biz_social",
+  "path_biz_finance",
+  "path_biz_mfg_trade",
+  "path_biz_entrepreneur",
+  "path_biz_consulting",
+  "path_biz_law_hr",
+  "path_biz_tech",
+  "career_checklist_html",
+  "top_5_career_goals",
+  "decide_stage_section",
+  "current_5ds_stage",
+  "final_chosen_career_goal",
+  "personal_vision_statement",
+  "a_promise_to_self",
+  "date_of_decision",
+  "reason_for_goal_change"
+ ],
  "fields": [
+  {
+   "fieldname": "first_year_notice",
+   "fieldtype": "HTML",
+   "label": "First Year Notice",
+   "options": "<div class=\"alert alert-info\" style=\"margin-top:10px;\"><strong>Notice:</strong> The EGS:DB program is exclusively for First-Year Undergraduate students.</div>"
+  },
   {
    "fieldname": "student_name",
    "fieldtype": "Data",
@@ -26,29 +83,64 @@
    "in_list_view": 1,
    "label": "Student Email",
    "options": "Email",
+   "reqd": 1,
    "unique": 1
   },
   {
-   "fieldname": "email_otp",
+   "fieldname": "access_token",
    "fieldtype": "Data",
-   "label": "Email OTP"
+   "hidden": 1,
+   "label": "Access Token",
+   "read_only": 1
+  },
+  {
+   "fieldname": "guardian_phone_number",
+   "fieldtype": "Data",
+   "label": "Guardian Phone Number"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "City",
+   "options": "Delhi\nHyderabad\nLucknow\nMumbai\nVijayawada\nAligarh\nKolkata\nChennai\nBengaluru\nKozhikode\nPune\nOnline",
+   "reqd": 1
   },
   {
    "fieldname": "university_college",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "University/College",
-   "options": "EGS Institution"
+   "options": "EGS Institution",
+   "reqd": 1
+  },
+  {
+   "fieldname": "event",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Event",
+   "options": "EGS Event"
   },
   {
    "fieldname": "faculty_department",
-   "fieldtype": "Data",
-   "label": "Faculty/Department"
+   "fieldtype": "Link",
+   "label": "Faculty/Department",
+   "options": "EGS Faculty"
   },
   {
-   "fieldname": "course_and_year",
+   "fieldname": "course",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Course",
+   "options": "EGS Course",
+   "reqd": 1
+  },
+  {
+   "default": "2026",
+   "fieldname": "cohort_year",
    "fieldtype": "Data",
-   "label": "Course & Year"
+   "label": "Cohort / Admission Year",
+   "reqd": 1
   },
   {
    "fieldname": "attendance_section",
@@ -56,28 +148,164 @@
    "label": "Attendance & Verification"
   },
   {
-   "default": "0",
-   "fieldname": "registered_online",
-   "fieldtype": "Check",
-   "label": "Registered Online"
-  },
-  {
-   "default": "0",
-   "fieldname": "qr_code_group_joined",
-   "fieldtype": "Check",
-   "label": "QR Code Group Joined"
-  },
-  {
-   "default": "0",
-   "fieldname": "physical_attendance",
-   "fieldtype": "Check",
-   "label": "Physical Attendance"
+   "default": "Registered",
+   "fieldname": "event_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Event Status",
+   "options": "Registered\nChecked-In"
   },
   {
    "default": "0",
    "fieldname": "food_coupon_issued",
    "fieldtype": "Check",
    "label": "Food Coupon Issued"
+  },
+  {
+   "fieldname": "food_coupon_code",
+   "fieldtype": "Data",
+   "label": "Food Coupon Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "career_goals_section",
+   "fieldtype": "Section Break",
+   "label": "Explore DREAM BIG Career Goals (Select up to 5)"
+  },
+  {
+   "fieldname": "html_employee_cat",
+   "fieldtype": "HTML",
+   "label": "Employee Category (Individual Leadership)",
+   "options": "<b>Employee Category (Individual Leadership)</b>"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_govt_public",
+   "fieldtype": "Check",
+   "label": "Government/Public Service-Leadership Roles"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_govt_reg",
+   "fieldtype": "Check",
+   "label": "Govt. Regulatory & Development Leadership"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_finance",
+   "fieldtype": "Check",
+   "label": "Financial Leadership (RBI, Banks, CFOs)"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_scientific",
+   "fieldtype": "Check",
+   "label": "Govt. Scientific & Professional Leadership"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_academic",
+   "fieldtype": "Check",
+   "label": "Academic Excellence & Leadership"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_inventions",
+   "fieldtype": "Check",
+   "label": "Inventions and Discovery"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_prof_biz",
+   "fieldtype": "Check",
+   "label": "Professional & Business Leadership"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_arts_sports",
+   "fieldtype": "Check",
+   "label": "Arts, Journalism & Sports"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_religious",
+   "fieldtype": "Check",
+   "label": "Religious Scholarship"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_political",
+   "fieldtype": "Check",
+   "label": "Political Leadership"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_emp_un_global",
+   "fieldtype": "Check",
+   "label": "UN / Global Organisations"
+  },
+  {
+   "fieldname": "career_goals_col_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "html_employer_cat",
+   "fieldtype": "HTML",
+   "label": "Employer Category",
+   "options": "<b>Employer Category</b>"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_biz_institution",
+   "fieldtype": "Check",
+   "label": "Institution Building (Schools, Hospitals, Media)"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_biz_social",
+   "fieldtype": "Check",
+   "label": "Social Welfare, NGOs & Civil Society"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_biz_finance",
+   "fieldtype": "Check",
+   "label": "Financial Leadership (VC, Investment Banks, Fin-Tech)"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_biz_mfg_trade",
+   "fieldtype": "Check",
+   "label": "Manufacturing, Services and Trade"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_biz_entrepreneur",
+   "fieldtype": "Check",
+   "label": "Entrepreneurship & Investment"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_biz_consulting",
+   "fieldtype": "Check",
+   "label": "Consulting & Think Tanks"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_biz_law_hr",
+   "fieldtype": "Check",
+   "label": "Law, Financial & HR Services"
+  },
+  {
+   "default": "0",
+   "fieldname": "path_biz_tech",
+   "fieldtype": "Check",
+   "label": "Technology and Digital Innovation"
+  },
+  {
+   "fieldname": "career_checklist_html",
+   "fieldtype": "HTML",
+   "label": "Career Checklist HTML"
   },
   {
    "fieldname": "top_5_career_goals",
@@ -91,10 +319,18 @@
    "label": "DECIDE Stage: A Promise to Self"
   },
   {
+   "default": "DREAM",
+   "fieldname": "current_5ds_stage",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Current 5Ds Stage",
+   "options": "DREAM\nDISCOVER\nDECIDE\nDEVELOP/PREPARE\nDELIVER"
+  },
+  {
    "fieldname": "final_chosen_career_goal",
    "fieldtype": "Link",
    "label": "Final Chosen Career Goal",
-   "options": "EGS Student Career Choice"
+   "options": "EGS Career Pathway"
   },
   {
    "fieldname": "personal_vision_statement",
@@ -102,19 +338,28 @@
    "label": "Personal Vision Statement"
   },
   {
+   "fieldname": "a_promise_to_self",
+   "fieldtype": "Small Text",
+   "label": "A Promise to Self"
+  },
+  {
    "fieldname": "date_of_decision",
    "fieldtype": "Date",
    "label": "Date of Decision"
+  },
+  {
+   "fieldname": "reason_for_goal_change",
+   "fieldtype": "Small Text",
+   "label": "Reason for Goal Change"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-05 08:40:00.000000",
+ "modified": "2026-11-07 05:29:52.210372",
  "modified_by": "Administrator",
  "module": "Dreambig Egs",
  "name": "EGS Student Participant",
- "naming_rule": "Expression",
- "autoname": "format:STU-{YY}-{####}",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -130,6 +375,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

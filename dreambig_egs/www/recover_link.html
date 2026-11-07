@@ -1,0 +1,74 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container my-5" style="max-width: 540px;">
+    <div class="card shadow-sm border-0 p-4 p-md-5 bg-white" style="border-radius: 12px;">
+        <div class="text-center mb-4">
+            <div class="mb-2">
+                <span style="font-size: 2.8rem;">🔑</span>
+            </div>
+            <h3 class="font-weight-bold text-dark">{{ _("Recover Access Link") }}</h3>
+            <p class="text-muted" style="font-size: 0.9rem;">
+                {{ _("Enter the student email address you used during registration. We will send your secure personalized Magic Link right away.") }}
+            </p>
+        </div>
+
+        <form id="recover-link-form" onsubmit="handle_recover(event)">
+            <div class="mb-3">
+                <label for="student_email" class="form-label font-weight-bold text-dark">{{ _("Registered Student Email") }}</label>
+                <input type="email" class="form-control form-control-lg" id="student_email" placeholder="name@example.com" required style="font-size: 1rem;">
+            </div>
+
+            <div id="recover-alert" class="alert d-none mb-3 py-2" role="alert"></div>
+
+            <button type="submit" id="btn-submit" class="btn btn-primary btn-lg w-100 font-weight-bold" style="border-radius: 8px;">
+                {{ _("Send My Access Link") }}
+            </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top">
+            <small class="text-muted">
+                {{ _("Haven't registered yet?") }} <a href="/egs-student-participant/new" class="text-primary font-weight-bold">{{ _("Register here") }}</a>
+            </small>
+        </div>
+    </div>
+</div>
+
+<script>
+function handle_recover(e) {
+    e.preventDefault();
+    var email = document.getElementById('student_email').value.trim();
+    var alertBox = document.getElementById('recover-alert');
+    var btn = document.getElementById('btn-submit');
+
+    if (!email) return;
+
+    btn.disabled = true;
+    btn.innerText = '{{ _("Sending Link...") }}';
+    alertBox.className = 'alert d-none mb-3 py-2';
+
+    frappe.call({
+        method: "dreambig_egs.dreambig_egs.doctype.egs_student_participant.egs_student_participant.resend_magic_link",
+        args: { email: email },
+        callback: function(r) {
+            btn.disabled = false;
+            btn.innerText = '{{ _("Send My Access Link") }}';
+            if (r.message && r.message.status === "success") {
+                alertBox.className = 'alert alert-success mb-3 py-2';
+                alertBox.innerText = r.message.message || '{{ _("Your secure access link has been emailed to you.") }}';
+                document.getElementById('student_email').value = '';
+            } else {
+                alertBox.className = 'alert alert-danger mb-3 py-2';
+                alertBox.innerText = (r.message && r.message.message) ? r.message.message : '{{ _("Email not found. Please verify or register.") }}';
+            }
+        },
+        error: function(err) {
+            btn.disabled = false;
+            btn.innerText = '{{ _("Send My Access Link") }}';
+            alertBox.className = 'alert alert-danger mb-3 py-2';
+            alertBox.innerText = '{{ _("An error occurred. Please try again later.") }}';
+        }
+    });
+}
+</script>
+{% endblock %}

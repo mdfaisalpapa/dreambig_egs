@@ -15,9 +15,11 @@
   },
   {
    "fieldname": "finalized_career_goal",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Finalized Career Goal"
+   "label": "Finalized Career Goal",
+   "options": "EGS Career Pathway",
+   "reqd": 1
   },
   {
    "fieldname": "current_5ds_stage",

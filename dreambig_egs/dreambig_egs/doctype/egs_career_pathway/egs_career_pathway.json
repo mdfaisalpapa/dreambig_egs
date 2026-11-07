@@ -6,6 +6,14 @@
  "engine": "InnoDB",
  "fields": [
   {
+   "fieldname": "career_category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Career Category",
+   "options": "Employee Category (Individual Leadership)\nEmployer Category",
+   "reqd": 1
+  },
+  {
    "fieldname": "career_title",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -14,17 +22,23 @@
    "unique": 1
   },
   {
-   "fieldname": "domain",
-   "fieldtype": "Select",
+   "fieldname": "career_group",
+   "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Domain",
-   "options": "Academia\nJudiciary\nService/Civil\nBusiness/Entrepreneurship\nDefence\nInnovation/Science\nOther"
+   "label": "Career Group",
+   "reqd": 1
   },
   {
+   "default": "0",
+   "fieldname": "brochure_index",
+   "fieldtype": "Int",
+   "label": "Brochure Sort Index"
+  },
+  {
+   "default": "1",
    "fieldname": "active",
    "fieldtype": "Check",
-   "label": "Active Catalog Item",
-   "default": "1"
+   "label": "Active Catalog Item"
   },
   {
    "fieldname": "education_requirements",
@@ -39,7 +53,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-31 21:35:00.000000",
+ "modified": "2026-11-06 04:50:00.000000",
  "modified_by": "Administrator",
  "module": "Dreambig Egs",
  "name": "EGS Career Pathway",
@@ -58,6 +72,30 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 0,
+   "write": 0
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "Guest",
+   "share": 0,
+   "write": 0
   }
  ]
 }

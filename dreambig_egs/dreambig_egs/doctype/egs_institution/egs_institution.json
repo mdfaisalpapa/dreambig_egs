@@ -18,8 +18,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Institution Type",
-   "options": "University\nCollege\nFaculty\nDepartment",
-   "reqd": 1
+   "options": "University\nCollege\nFaculty\nDepartment\nOther",
+   "reqd": 0
   },
   {
    "fieldname": "city",
@@ -49,11 +49,17 @@
    "fieldtype": "Link",
    "label": "Designated Teacher-Mentor (Anchor)",
    "options": "EGS Mentor Profile"
+  },
+  {
+   "fieldname": "cohort_groups",
+   "fieldtype": "Table",
+   "label": "WhatsApp Cohort Groups",
+   "options": "EGS Institution Cohort"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-05 08:40:00.000000",
+ "modified": "2026-11-06 03:55:00.000000",
  "modified_by": "Administrator",
  "module": "Dreambig Egs",
  "name": "EGS Institution",
@@ -72,6 +78,14 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Guest"
+  },
+  {
+   "read": 1,
+   "role": "All"
   }
  ],
  "sort_field": "modified",

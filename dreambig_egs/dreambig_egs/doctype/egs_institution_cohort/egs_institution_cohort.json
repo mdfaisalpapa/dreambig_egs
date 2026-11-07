@@ -1,0 +1,51 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "hash",
+ "creation": "2026-11-07 05:40:00.000000",
+ "custom": 0,
+ "docstatus": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "course",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Course / Department",
+   "options": "EGS Course",
+   "reqd": 1
+  },
+  {
+   "default": "2026",
+   "fieldname": "cohort_year",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Cohort Year",
+   "reqd": 1
+  },
+  {
+   "fieldname": "whatsapp_group_link",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "WhatsApp Group URL",
+   "options": "URL",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-07 05:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "Dreambig Egs",
+ "name": "EGS Institution Cohort",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
