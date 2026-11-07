@@ -11,6 +11,7 @@
   "phone_number",
   "student_email",
   "access_token",
+  "telegram_chat_id",
   "guardian_phone_number",
   "city",
   "university_college",
@@ -92,6 +93,13 @@
    "hidden": 1,
    "label": "Access Token",
    "read_only": 1
+  },
+  {
+   "fieldname": "telegram_chat_id",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Telegram Chat ID",
+   "unique": 1
   },
   {
    "fieldname": "guardian_phone_number",

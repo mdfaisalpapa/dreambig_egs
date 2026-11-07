@@ -85,66 +85,23 @@ def advance_to_deliver(student_id, token):
 
 
 @frappe.whitelist(allow_guest=True)
+def get_registration_url():
+	"""
+	Returns the full Web Form registration URL using Frappe site configuration host_name / get_url().
+	"""
+	from dreambig_egs.bot_engine.api import get_registration_url as _get_registration_url
+
+	return _get_registration_url()
+
+
+@frappe.whitelist(allow_guest=True)
 def bot_webhook(platform="telegram", **kwargs):
 	"""
 	Universal webhook router for platform-agnostic bot messaging (Telegram, WhatsApp, etc.).
-	Parses incoming payload, retrieves active EGS Bot Session, and executes 5Ds Workflow Engine.
+	Delegates to dreambig_egs.bot_engine.api.bot_webhook.
 	"""
-	from dreambig_egs.bot_engine import get_messaging_provider, process_bot_message
+	from dreambig_egs.bot_engine.api import bot_webhook as _bot_webhook
 
-	platform_label = "Telegram" if (platform or "").strip().lower() == "telegram" else "WhatsApp"
-	provider = get_messaging_provider(platform)
-
-	# Extract incoming request payload (JSON or form-data)
-	raw_data = None
-	if hasattr(frappe.local, "request") and frappe.local.request:
-		try:
-			raw_data = frappe.local.request.get_json()
-		except Exception:
-			raw_data = None
-
-	if not raw_data:
-		raw_data = dict(frappe.local.form_dict or kwargs or {})
-
-	# Remove internal frappe parameters like cmd
-	raw_data.pop("cmd", None)
-
-	# Normalize payload through provider adapter
-	message_data = provider.parse_incoming_webhook(raw_data)
-	chat_id = message_data.get("chat_id")
-
-	if not chat_id:
-		return {"status": "ignored", "reason": "No chat_id in incoming webhook"}
-
-	# Retrieve or initialize active EGS Bot Session
-	session = None
-	sessions = frappe.get_all(
-		"EGS Bot Session",
-		filters={"chat_id": str(chat_id), "platform": platform_label},
-		limit=1,
-	)
-	if sessions:
-		session = frappe.get_doc("EGS Bot Session", sessions[0].name)
-	else:
-		session = frappe.get_doc({
-			"doctype": "EGS Bot Session",
-			"chat_id": str(chat_id),
-			"platform": platform_label,
-			"current_conversation_state": "IDLE",
-			"session_data": "{}",
-		})
-		session.insert(ignore_permissions=True)
-		frappe.db.commit()
-
-	# Delegate to 5Ds Chatbot Workflow Engine
-	process_bot_message(session=session, message_data=message_data, provider=provider)
-	frappe.db.commit()
-
-	return {
-		"status": "success",
-		"chat_id": chat_id,
-		"platform": platform_label,
-		"conversation_state": session.current_conversation_state,
-	}
+	return _bot_webhook(platform=platform, **kwargs)
 
 
