@@ -17,6 +17,9 @@ class EGSCheckInLog(Document):
 		handle_after_insert(self)
 
 
+EGSCheckinLog = EGSCheckInLog
+
+
 def before_insert(doc, method=None):
 	"""
 	Hook function callable via Frappe doc_events.
