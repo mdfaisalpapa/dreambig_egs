@@ -485,8 +485,87 @@ def run_tests():
 	assert bot_sess.current_conversation_state == "AWAITING_MOBILE_BINDING", "Sending /start after logout did not trigger re-binding!"
 	print("✓ Sending /start after logout triggered fresh identity binding (AWAITING_MOBILE_BINDING)")
 
-	# --- 14. Cleanup ---
-	print("\n--- 14. Cleanup ---")
+	# --- 14. Testing In-Chat Event Check-in & Cohort WhatsApp Community Link ---
+	print("\n--- 14. Testing In-Chat Event Check-in & Cohort WhatsApp Community Link ---")
+	# Re-create or update student to Registered status (pre-checkin)
+	frappe.db.set_value(
+		"EGS Student Participant",
+		student.name,
+		{
+			"event_status": "Registered",
+			"food_coupon_issued": 0,
+			"food_coupon_code": None,
+			"current_5ds_stage": "DREAM",
+		},
+		update_modified=False,
+	)
+	# Seed matching cohort WhatsApp link
+	cohort_inst = frappe.get_doc("EGS Institution", student.university_college)
+	cohort_row_exists = False
+	for r in cohort_inst.get("cohort_groups", []):
+		if r.course == student.course and r.cohort_year == student.cohort_year:
+			r.whatsapp_group_link = "https://chat.whatsapp.com/TestCohortGroup123"
+			cohort_row_exists = True
+			break
+	if not cohort_row_exists:
+		cohort_inst.append("cohort_groups", {
+			"course": student.course,
+			"cohort_year": student.cohort_year,
+			"whatsapp_group_link": "https://chat.whatsapp.com/TestCohortGroup123",
+		})
+	cohort_inst.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	# Re-bind session to student
+	bot_sess.student_participant = student.name
+	bot_sess.current_conversation_state = "IDLE"
+	bot_sess.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	# 14.1 Test Profile rendering with Check-in and Cohort group link
+	bot_webhook(platform="telegram", **{"message": {"chat": {"id": test_tg_chat}, "text": "/profile"}})
+	student.reload()
+	assert student.event_status == "Registered"
+	print("✓ In-bot profile renders event status and cohort group links")
+
+	# 14.2 Test In-chat Event Check-in
+	checkin_payload = {
+		"callback_query": {
+			"id": "cb_chk",
+			"message": {"chat": {"id": test_tg_chat}},
+			"data": "EVENT_CHECKIN",
+		}
+	}
+	bot_webhook(platform="telegram", **checkin_payload)
+	student.reload()
+	assert student.event_status == "Checked-In", "In-chat check-in did not update event_status to Checked-In!"
+	assert student.food_coupon_issued == 1, "In-chat check-in did not issue food coupon!"
+	assert student.food_coupon_code.startswith("MEAL-"), "Food coupon code format incorrect!"
+	print(f"✓ In-chat digital check-in succeeded with food coupon: {student.food_coupon_code}")
+
+	# 14.3 Test Cohort Community command
+	cohort_payload = {
+		"message": {
+			"chat": {"id": test_tg_chat},
+			"text": "/cohort",
+		}
+	}
+	bot_webhook(platform="telegram", **cohort_payload)
+	print("✓ In-chat cohort community command (/cohort) returned matching WhatsApp group link")
+
+	# 14.4 Test DISCOVER View Shortlist button
+	view_shortlist_payload = {
+		"callback_query": {
+			"id": "cb_view_shortlist",
+			"message": {"chat": {"id": test_tg_chat}},
+			"data": "DISCOVER_VIEW_GOALS",
+		}
+	}
+	bot_webhook(platform="telegram", **view_shortlist_payload)
+	print("✓ In-chat shortlist display ('DISCOVER_VIEW_GOALS') rendered student's shortlisted goals")
+
+	# --- 15. Cleanup ---
+	print("\n--- 15. Cleanup ---")
 	for bs in frappe.get_all("EGS Bot Session", filters={"chat_id": ["in", [test_phone, "91" + test_phone, test_tg_chat, "unreg_tg_111", "unreg_tg_999", "919000000000"]]}):
 		frappe.delete_doc("EGS Bot Session", bs.name, force=True)
 	for bs in frappe.get_all("EGS Bot Session", filters={"student_participant": student.name}):

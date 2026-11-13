@@ -12,6 +12,9 @@ from dreambig_egs.dreambig_egs.doctype.egs_student_participant.egs_student_parti
 	add_egs_commitment,
 	revert_5ds_stage,
 	step_back_stage,
+	process_student_checkin,
+	get_cohort_whatsapp_link,
+	get_all_career_pathways,
 )
 from dreambig_egs.bot_engine.provider import BaseMessagingProvider
 
@@ -187,6 +190,43 @@ class EGS5DsWorkflowEngine:
 				self.handle_unlinked_session(text, payload)
 			return
 
+		# 3.1 Event Check-in Handler
+		if norm_input in ("EVENT_CHECKIN", "CHECK_IN", "CHECKIN", "📍 CHECK IN TO EVENT") or low_text in ("/checkin", "check in", "checkin"):
+			if student:
+				self.handle_event_checkin(student)
+			else:
+				self.handle_unlinked_session(text, payload)
+			return
+
+		# 3.2 Cohort Community Link Handler
+		if norm_input in ("JOIN_COHORT", "COHORT_GROUP", "COHORT", "WHATSAPP_GROUP") or low_text in ("/cohort", "cohort", "group"):
+			if student:
+				cohort_res = get_cohort_whatsapp_link(student.name)
+				if cohort_res and cohort_res.get("status") == "success" and cohort_res.get("link"):
+					link = cohort_res["link"]
+					buttons = [
+						{"id": "OPEN_COHORT", "title": "👥 Open WhatsApp Group", "url": link},
+						{"id": "BACK_TO_MENU", "title": "⏪ Back to Menu"},
+					]
+					self.provider.send_interactive_message(
+						self.chat_id,
+						f"👥 **Your Cohort Community WhatsApp Group**\n\n"
+						f"Connect with your fellow First-Year peers in **{student.course}** (Cohort {student.cohort_year}) at **{student.university_college}**:\n\n"
+						f"{link}",
+						buttons,
+					)
+				else:
+					buttons = [{"id": "BACK_TO_MENU", "title": "⏪ Back to Menu"}]
+					self.provider.send_interactive_message(
+						self.chat_id,
+						"ℹ️ **Cohort WhatsApp Group Not Yet Assigned**\n\n"
+						"Your institution or course coordinator will publish the WhatsApp group link soon. Check back or visit your profile!",
+						buttons,
+					)
+			else:
+				self.handle_unlinked_session(text, payload)
+			return
+
 		# 4. Unlinked session identification
 		if not self.session.student_participant:
 			self.handle_unlinked_session(text, payload)
@@ -261,6 +301,8 @@ class EGS5DsWorkflowEngine:
 		- Academic: student.course (Cohort student.cohort_year) • student.university_college
 		- ID: student.name
 		- Active Stage: student.current_5ds_stage
+		- Event Status & Food Coupon (if checked in)
+		- Cohort WhatsApp group link (if available)
 		- Goal (if DECIDE or later): student.final_chosen_career_goal
 		Sends this profile message with [⏪ Back to Menu] and [🚪 Logout].
 		"""
@@ -269,6 +311,15 @@ class EGS5DsWorkflowEngine:
 		stage_upper = stage.upper()
 
 		academic_info = f"{student.course or 'Course'} (Cohort {student.cohort_year or '2026'}) • {student.university_college or 'Institution'}"
+
+		event_line = f"\n• **Event Status:** {student.event_status or 'Registered'}"
+		if student.food_coupon_code:
+			event_line += f" (🍽️ Meal Coupon: `{student.food_coupon_code}`)"
+
+		# Cohort WhatsApp group link
+		cohort_res = get_cohort_whatsapp_link(student.name)
+		cohort_link = cohort_res.get("link") if cohort_res and cohort_res.get("status") == "success" else None
+		cohort_line = f"\n• **Cohort Community:** [Join WhatsApp Group]({cohort_link})" if cohort_link else ""
 
 		goal_line = ""
 		if any(st in stage_upper for st in ("DECIDE", "DEVELOP", "DELIVER")) or student.final_chosen_career_goal:
@@ -281,13 +332,18 @@ class EGS5DsWorkflowEngine:
 			f"• **Academic:** {academic_info}\n"
 			f"• **ID:** `{student.name}`\n"
 			f"• **Active Stage:** {stage}"
+			f"{event_line}"
+			f"{cohort_line}"
 			f"{goal_line}"
 		)
 
-		buttons = [
-			{"id": "BACK_TO_MENU", "title": "⏪ Back to Menu"},
-			{"id": "LOGOUT", "title": "🚪 Logout"},
-		]
+		buttons = []
+		if cohort_link:
+			buttons.append({"id": "JOIN_COHORT", "title": "👥 Join Cohort Group", "url": cohort_link})
+		if student.event_status != "Checked-In":
+			buttons.append({"id": "EVENT_CHECKIN", "title": "📍 Check In to Event"})
+		buttons.append({"id": "BACK_TO_MENU", "title": "⏪ Back to Menu"})
+		buttons.append({"id": "LOGOUT", "title": "🚪 Logout"})
 
 		self.set_conversation_state("VIEWING_PROFILE")
 		self.session.save(ignore_permissions=True)
@@ -367,6 +423,84 @@ class EGS5DsWorkflowEngine:
 		self.session.save(ignore_permissions=True)
 		self.provider.send_interactive_message(self.chat_id, msg, buttons)
 
+	def send_dream_menu(self, student):
+		"""
+		Menu for registered students who have not yet checked in to their event.
+		Offers Digital Event Check-in, Cohort WhatsApp Community, and Profile.
+		"""
+		student.reload()
+		cohort_res = get_cohort_whatsapp_link(student.name)
+		cohort_link = cohort_res.get("link") if cohort_res and cohort_res.get("status") == "success" else None
+
+		event_name = "your registered DREAM BIG conference"
+		if student.event:
+			event_name = frappe.db.get_value("EGS Event", student.event, "event_name") or event_name
+
+		msg = (
+			f"🌟 **Stage 1: DREAM — Foundation & Aspiration**\n\n"
+			f"Welcome, **{student.student_name}**!\n"
+			f"• **Event:** {event_name}\n"
+			f"• **Status:** {student.event_status or 'Registered'}\n\n"
+			f"Your 5 DREAM BIG Career Goals (Exercise 2) will unlock upon event check-in."
+		)
+
+		buttons = []
+		if student.event_status != "Checked-In":
+			buttons.append({"id": "EVENT_CHECKIN", "title": "📍 Check In to Event"})
+		if cohort_link:
+			buttons.append({"id": "JOIN_COHORT", "title": "👥 Join Cohort Group", "url": cohort_link})
+		buttons.append({"id": "VIEW_PROFILE", "title": "👤 My Profile"})
+
+		self.set_conversation_state("IDLE")
+		self.session.save(ignore_permissions=True)
+		self.provider.send_interactive_message(self.chat_id, msg, buttons)
+
+	def handle_event_checkin(self, student):
+		"""
+		Executes in-chat digital check-in for the student.
+		Issues the digital food coupon (if event allows) and unlocks Stage 2: DISCOVER.
+		"""
+		try:
+			student, already_checked_in, coupon_issued = process_student_checkin(student)
+			student.reload()
+
+			coupon_msg = ""
+			if student.food_coupon_code:
+				coupon_msg = (
+					f"\n\n🍽️ **Digital Food Coupon Issued:**\n"
+					f"`{student.food_coupon_code}`\n"
+					f"*(Show this coupon code at the event lunch counter)*"
+				)
+
+			if already_checked_in:
+				res_msg = (
+					f"✅ **Already Checked In!**\n\n"
+					f"You are checked in for your event.{coupon_msg}\n\n"
+					f"Your 5 DREAM BIG Career Goals (Stage 2: DISCOVER) are active."
+				)
+			else:
+				res_msg = (
+					f"🎉 **Check-In Confirmed!**\n\n"
+					f"Welcome to the event venue, **{student.student_name}**!{coupon_msg}\n\n"
+					f"Stage 2: DISCOVER (Exercise 2) is now unlocked."
+				)
+
+			buttons = [
+				{"id": "DISCOVER_VIEW_GOALS", "title": "📋 View Shortlist"},
+				{"id": "DISCOVER_YES", "title": "① Yes, decided"},
+				{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
+				{"id": "BACK_TO_MENU", "title": "⏪ Back to Menu"},
+			]
+			self.set_conversation_state("IDLE")
+			self.session.save(ignore_permissions=True)
+			self.provider.send_interactive_message(self.chat_id, res_msg, buttons)
+		except Exception as e:
+			frappe.log_error(f"In-bot event check-in failed: {e}", "Bot Event Check-in")
+			self.provider.send_text(
+				self.chat_id,
+				f"⚠️ Check-in could not be completed: {e}\nPlease check with the registration desk.",
+			)
+
 	def handle_unlinked_session(self, text: str, payload: str):
 		"""
 		Handles unregistered users or users tapping '[🔄 I have registered]' to refresh their session.
@@ -423,9 +557,12 @@ class EGS5DsWorkflowEngine:
 		"""
 		Dispatches the appropriate interactive menu based on active 5Ds stage.
 		"""
-		stage = (student.current_5ds_stage or "DISCOVER").upper()
+		student.reload()
+		stage = (student.current_5ds_stage or "DREAM").upper()
 
-		if "DISCOVER" in stage:
+		if student.event_status != "Checked-In" and stage in ("DREAM", ""):
+			self.send_dream_menu(student)
+		elif "DISCOVER" in stage or student.event_status == "Checked-In" and stage == "DREAM":
 			self.send_discover_nudge(student)
 		elif "DECIDE" in stage:
 			self.send_decide_prompt(student)
@@ -443,6 +580,7 @@ class EGS5DsWorkflowEngine:
 
 		buttons = [
 			{"id": "DISCOVER_YES", "title": "① Yes, decided"},
+			{"id": "DISCOVER_VIEW_GOALS", "title": "📋 View Shortlist"},
 			{"id": "DISCOVER_STILL_EXPLORING", "title": "② Still exploring"},
 			{"id": "DISCOVER_NEED_HELP", "title": "③ I need help"},
 			{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
@@ -460,6 +598,34 @@ class EGS5DsWorkflowEngine:
 	def handle_discover_flow(self, student, text: str, payload: str):
 		curr_state = self.session.current_conversation_state or "IDLE"
 		norm_input = (payload or text).strip().upper()
+
+		# Check for "View Shortlist"
+		if norm_input in ("DISCOVER_VIEW_GOALS", "VIEW_SHORTLIST", "SHORTLIST", "📋 VIEW SHORTLIST") or "shortlist" in text.lower():
+			student.reload()
+			top_goals = [
+				c.career_pathway for c in student.get("top_5_career_goals", []) if c.career_pathway
+			]
+			if top_goals:
+				goals_text = "\n".join([f"• **{i+1}.** {g}" for i, g in enumerate(top_goals)])
+				msg = (
+					f"📋 **Your Selected Top {len(top_goals)} Career Goals (Exercise 2):**\n\n"
+					f"{goals_text}\n\n"
+					"You can finalize one of these goals for Stage 3: DECIDE."
+				)
+			else:
+				msg = (
+					"📋 **Your Career Shortlist:**\n\n"
+					"You haven't selected your 5 career goals yet.\n"
+					"Log in to the web portal or explore the 42 official pathways in your brochure!"
+				)
+
+			buttons = [
+				{"id": "DISCOVER_YES", "title": "① Yes, decided"},
+				{"id": "DISCOVER_NEED_HELP", "title": "③ I need help"},
+				{"id": "BACK_TO_MENU", "title": "⏪ Back to Menu"},
+			]
+			self.provider.send_interactive_message(self.chat_id, msg, buttons)
+			return
 
 		# Check for "I need help" escalation
 		if norm_input in ("DISCOVER_NEED_HELP", "3", "③ I NEED HELP") or "help" in text.lower() or "stuck" in text.lower():
@@ -494,6 +660,7 @@ class EGS5DsWorkflowEngine:
 		if norm_input in ("DISCOVER_STILL_EXPLORING", "DISCOVER_STILL_DECIDING", "2", "② STILL EXPLORING", "② STILL DECIDING") or "still" in text.lower():
 			buttons = [
 				{"id": "DISCOVER_YES", "title": "① Ready to decide"},
+				{"id": "DISCOVER_VIEW_GOALS", "title": "📋 View Shortlist"},
 				{"id": "DISCOVER_NEED_HELP", "title": "③ I need help"},
 				{"id": "BACK_TO_MENU", "title": "⏪ Back to Menu"},
 			]
