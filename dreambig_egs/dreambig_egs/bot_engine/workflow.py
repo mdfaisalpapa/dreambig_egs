@@ -428,7 +428,7 @@ class EGS5DsWorkflowEngine:
 	def send_dream_menu(self, student):
 		"""
 		Menu for registered students who have not yet checked in to their event.
-		Offers Digital Event Check-in, Cohort WhatsApp Community, and Profile.
+		Offers Digital Event Check-in, Cohort WhatsApp Community, Profile, and WebApp Links.
 		"""
 		student.reload()
 		cohort_res = get_cohort_whatsapp_link(student.name)
@@ -448,7 +448,9 @@ class EGS5DsWorkflowEngine:
 
 		buttons = []
 		if student.event_status != "Checked-In":
+			checkin_webapp_url = f"{get_url()}/event-checkin?id={student.name}&key={student.access_token}"
 			buttons.append({"id": "EVENT_CHECKIN", "title": "📍 Check In to Event"})
+			buttons.append({"id": "CHECKIN_WEBAPP", "title": "📱 Event Check-in WebApp", "web_app": checkin_webapp_url})
 		if cohort_link:
 			buttons.append({"id": "JOIN_COHORT", "title": "👥 Join Cohort Group", "url": cohort_link})
 		buttons.append({"id": "VIEW_PROFILE", "title": "👤 My Profile"})
@@ -580,9 +582,16 @@ class EGS5DsWorkflowEngine:
 		self.set_conversation_state("DISCOVER_AWAITING_CHOICE")
 		self.session.save(ignore_permissions=True)
 
+		dashboard_webapp_url = (
+			f"{get_url()}/my-dream-big?id={student.name}&key={student.access_token}"
+			if student
+			else f"{get_url()}/my-dream-big"
+		)
+
 		buttons = [
 			{"id": "DISCOVER_YES", "title": "① Yes, decided"},
 			{"id": "DISCOVER_VIEW_GOALS", "title": "📋 View Shortlist"},
+			{"id": "DISCOVER_WEBAPP", "title": "📱 DISCOVER WebApp", "web_app": dashboard_webapp_url},
 			{"id": "DISCOVER_STILL_EXPLORING", "title": "② Still exploring"},
 			{"id": "DISCOVER_NEED_HELP", "title": "③ I need help"},
 			{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
@@ -682,9 +691,11 @@ class EGS5DsWorkflowEngine:
 	def send_decide_prompt(self, student):
 		student.reload()
 		# If student has already committed in Stage 3 (DECIDE), show management menu with Advance/Revert
+		decide_webapp_url = f"{get_url()}/egs-decide-stage?id={student.name}&key={student.access_token}"
 		if student.current_5ds_stage == "DECIDE" and student.final_chosen_career_goal:
 			buttons = [
 				{"id": "PROCEED_TO_DEVELOP", "title": "🚀 Proceed to Stage 4: DEVELOP"},
+				{"id": "DECIDE_WEBAPP", "title": "📱 DECIDE WebApp", "web_app": decide_webapp_url},
 				{"id": "REVERT_TO_DISCOVER", "title": "⏪ Revert to DISCOVER"},
 				{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
 			]
@@ -696,7 +707,7 @@ class EGS5DsWorkflowEngine:
 				f"• **Finalized Career Goal:** {student.final_chosen_career_goal}\n"
 				f"• **Vision:** \"{student.personal_vision_statement or 'Not recorded'}\"\n"
 				f"• **Promise to Self:** \"{student.a_promise_to_self or 'Not recorded'}\"\n\n"
-				f"Select an action to proceed with your journey or revert:",
+				f"Select an action to proceed with your journey, open your DECIDE WebApp, or revert:",
 				buttons,
 			)
 			return
@@ -720,6 +731,7 @@ class EGS5DsWorkflowEngine:
 					"title": goal[:20],
 					"payload": goal,
 				})
+			buttons.append({"id": "DECIDE_WEBAPP", "title": "📱 DECIDE WebApp", "web_app": decide_webapp_url})
 			buttons.append({"id": "REVERT_TO_DISCOVER", "title": "⏪ Revert to DISCOVER"})
 			buttons.append({"id": "VIEW_PROFILE", "title": "👤 My Profile"})
 
@@ -924,9 +936,13 @@ class EGS5DsWorkflowEngine:
 		"""
 		Stage 4 Menu: [Add Commitment], [Update Progress], [🚀 Proceed to Stage 5: DELIVER], [⏪ Revert to DECIDE], [👤 My Profile], [Need Help].
 		"""
+		develop_webapp_url = f"{get_url()}/my-dream-big?id={student.name}&key={student.access_token}#develop"
+		checkin_log_url = f"{get_url()}/egs-check-in-log?id={student.name}&key={student.access_token}"
 		buttons = [
 			{"id": "DEVELOP_ADD_ACTION", "title": "Add Commitment"},
 			{"id": "DEVELOP_UPDATE_PROGRESS", "title": "Update Progress"},
+			{"id": "DEVELOP_WEBAPP", "title": "📱 DEVELOP WebApp", "web_app": develop_webapp_url},
+			{"id": "CHECKIN_LOG_WEBAPP", "title": "📝 Progress Log WebApp", "web_app": checkin_log_url},
 			{"id": "PROCEED_TO_DELIVER", "title": "🚀 Proceed to Stage 5: DELIVER"},
 			{"id": "REVERT_TO_DECIDE", "title": "⏪ Revert to DECIDE"},
 			{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
@@ -1273,10 +1289,12 @@ class EGS5DsWorkflowEngine:
 	# --- STAGE 5: DELIVER FLOW ---
 	def send_deliver_menu(self, student):
 		"""
-		Stage 5 Menu: [Log Accomplishment], [⏪ Revert to DEVELOP], [👤 My Profile].
+		Stage 5 Menu: [Log Accomplishment], [DELIVER WebApp], [⏪ Revert to DEVELOP], [👤 My Profile].
 		"""
+		deliver_webapp_url = f"{get_url()}/my-dream-big?id={student.name}&key={student.access_token}#deliver"
 		buttons = [
 			{"id": "DELIVER_LOG_ACC", "title": "Log Accomplishment"},
+			{"id": "DELIVER_WEBAPP", "title": "📱 DELIVER WebApp", "web_app": deliver_webapp_url},
 			{"id": "REVERT_TO_DEVELOP", "title": "⏪ Revert to DEVELOP"},
 			{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
 		]
