@@ -51,6 +51,7 @@ web_include_css = [
 ]
 web_include_js = [
 	"/assets/dreambig_egs/js/pwa-install.js",
+	"/assets/dreambig_egs/js/telegram-webapp-bridge.js",
 ]
 
 # include custom scss in every website theme (without file extension ".scss")
