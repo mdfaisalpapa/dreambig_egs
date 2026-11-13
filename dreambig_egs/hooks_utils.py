@@ -9,6 +9,7 @@ PWA_HEAD_HTML = """
 <meta name="apple-mobile-web-app-title" content="DREAM BIG">
 <link rel="apple-touch-icon" href="/assets/dreambig_egs/icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="/assets/dreambig_egs/icons/icon-512.png">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 """
 
 def update_website_context(context):

@@ -338,6 +338,8 @@ class EGS5DsWorkflowEngine:
 		)
 
 		buttons = []
+		portal_app_url = f"{get_url()}/my-dream-big?id={student.name}&key={student.access_token}"
+		buttons.append({"id": "OPEN_DASHBOARD_APP", "title": "📱 Open Dashboard App", "web_app": portal_app_url})
 		if cohort_link:
 			buttons.append({"id": "JOIN_COHORT", "title": "👥 Join Cohort Group", "url": cohort_link})
 		if student.event_status != "Checked-In":

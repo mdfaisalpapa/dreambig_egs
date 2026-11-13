@@ -105,8 +105,15 @@ class TelegramProvider(BaseMessagingProvider):
 		inline_keyboard = []
 		for i, b in enumerate(buttons or []):
 			title = str(b.get("title") or b.get("text") or b.get("id") or f"Option {i+1}")
-			if b.get("url"):
-				inline_keyboard.append([{"text": title, "url": str(b["url"])}])
+			if b.get("web_app"):
+				inline_keyboard.append([{"text": title, "web_app": {"url": str(b["web_app"])}}])
+			elif b.get("url"):
+				url_val = str(b["url"])
+				# Open HTTPS URLs in native Telegram in-app WebApp view when supported
+				if url_val.startswith("https://") and not ("wa.me" in url_val or "chat.whatsapp.com" in url_val):
+					inline_keyboard.append([{"text": title, "web_app": {"url": url_val}}])
+				else:
+					inline_keyboard.append([{"text": title, "url": url_val}])
 			else:
 				btn_id = str(b.get("id") or b.get("payload") or b.get("callback_data") or b.get("title") or f"btn_{i}")
 				inline_keyboard.append([{"text": title, "callback_data": btn_id[:64]}])
