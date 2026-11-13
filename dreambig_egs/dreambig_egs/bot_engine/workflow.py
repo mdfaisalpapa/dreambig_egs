@@ -397,8 +397,9 @@ class EGS5DsWorkflowEngine:
 		"""
 		Sends welcoming message stating their number is not registered, accompanied by
 		an inline URL button: '[📝 Register via Web]' and '[🔄 I have registered]'.
+		Points directly to /egs-student-participant/new to avoid 301 redirects inside Telegram WebApp.
 		"""
-		reg_url = f"{get_url()}/egs-student-participant"
+		reg_url = f"{get_url()}/egs-student-participant/new"
 		phone_str = f" (`{phone}`)" if phone else ""
 
 		if retry:

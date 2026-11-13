@@ -167,7 +167,7 @@ def run_tests():
 
 	# --- 4. Stage 1 (DREAM): New User Registration Routing & Refresh ---
 	print("\n--- 4. Testing Stage 1 (DREAM): Registration State & Dynamic URL Generation ---")
-	expected_reg_url = f"{get_url()}/egs-student-participant"
+	expected_reg_url = f"{get_url()}/egs-student-participant/new"
 	assert get_registration_url() == expected_reg_url, f"Expected {expected_reg_url}, got {get_registration_url()}"
 	print(f"✓ get_registration_url correctly generated dynamic URL using site host_name: {expected_reg_url}")
 
@@ -176,8 +176,8 @@ def run_tests():
 	try:
 		frappe.local.conf["host_name"] = "https://egs.dream-big.org"
 		assert "egs.dream-big.org" in get_registration_url()
-		assert get_registration_url().endswith("/egs-student-participant")
-		assert get_registration_url() == f"{get_url()}/egs-student-participant"
+		assert get_registration_url().endswith("/egs-student-participant/new")
+		assert get_registration_url() == f"{get_url()}/egs-student-participant/new"
 		print("✓ get_registration_url dynamically respects custom host_name")
 	finally:
 		frappe.local.conf["host_name"] = orig_host

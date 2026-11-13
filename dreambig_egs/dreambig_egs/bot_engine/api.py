@@ -15,9 +15,10 @@ from dreambig_egs.bot_engine.workflow import (
 @frappe.whitelist(allow_guest=True)
 def get_registration_url() -> str:
 	"""
-	Returns the full Web Form registration URL using Frappe site configuration host_name / get_url().
+	Returns the direct Web Form new entry registration URL.
+	Using /egs-student-participant/new prevents 301 redirection issues inside Telegram Mini App WebViews.
 	"""
-	return f"{get_url()}/egs-student-participant"
+	return f"{get_url()}/egs-student-participant/new"
 
 
 @frappe.whitelist(allow_guest=True)
