@@ -9,6 +9,8 @@ website_route_rules = [
 	{"from_route": "/my-dream-big", "to_route": "my_dream_big"},
 	{"from_route": "/recover-link", "to_route": "recover_link"},
 	{"from_route": "/event-checkin", "to_route": "event_checkin"},
+	{"from_route": "/manifest.json", "to_route": "manifest_json"},
+	{"from_route": "/sw.js", "to_route": "sw_js"},
 ]
 
 # Apps
@@ -44,8 +46,12 @@ website_route_rules = [
 # app_include_js = "/assets/dreambig_egs/js/dreambig_egs.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/dreambig_egs/css/dreambig_egs.css"
-# web_include_js = "/assets/dreambig_egs/js/dreambig_egs.js"
+web_include_css = [
+	"/assets/dreambig_egs/css/pwa-app.css",
+]
+web_include_js = [
+	"/assets/dreambig_egs/js/pwa-install.js",
+]
 
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "dreambig_egs/public/scss/website"
@@ -269,4 +275,8 @@ scheduler_events = {
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
+
+# Website Context
+update_website_context = "dreambig_egs.hooks_utils.update_website_context"
+
 
