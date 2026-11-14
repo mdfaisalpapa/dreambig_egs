@@ -70,6 +70,7 @@ class EGSStudentParticipant(Document):
 					delayed=True,
 				)
 			except Exception as e:
+				frappe.clear_last_message()
 				frappe.log_error(f"Failed to send magic link email to {self.student_email}: {e}", "Magic Link Sendmail")
 
 	def validate(self):
@@ -388,6 +389,7 @@ def send_checkin_confirmation(doc, event=None):
 			delayed=True,
 		)
 	except Exception as e:
+		frappe.clear_last_message()
 		frappe.log_error(
 			f"Failed to send checkin confirmation to {doc.student_email}: {e}",
 			"Checkin Email",
@@ -517,6 +519,7 @@ def send_login_credentials(email):
 	try:
 		frappe.sendmail(recipients=[email], subject=subject, message=message, now=True)
 	except Exception as e:
+		frappe.clear_last_message()
 		frappe.log_error(f"Failed to send login credentials email to {email}: {e}", "Login Credentials Sendmail")
 
 	return {"status": "success", "message": "Credentials sent!"}
