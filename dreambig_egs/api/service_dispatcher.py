@@ -40,6 +40,24 @@ def get_student_service_details(action_id: str, for_user: str = None) -> dict:
     token = student.get("access_token") if student else ""
     webapp_url = f"{get_url()}/my-dream-big?id={stu_id}&key={token}" if stu_id else f"{get_url()}/my-dream-big"
 
+    # --- 0. Registration Form Link ---
+    if action_id == "register":
+        reg_url = f"{get_url()}/egs-student-participant/new"
+        return {
+            "title": "Register for EGS",
+            "prompt": (
+                "📝 *Join the Dream Big Early Goal Setting (EGS) Cohort!*\n\n"
+                "First-Year undergraduate students can register online using the link below:\n\n"
+                f"🔗 [Click here to Open Registration Form]({reg_url})\n\n"
+                "After registering, return here and tap *📱 Share Contact to Login*."
+            ),
+            "sso_url": reg_url,
+            "options": [
+                {"label": "📝 Open Registration Form", "value": "open_reg", "url": reg_url},
+                {"label": "🔙 Back to Main Menu", "value": "menu"},
+            ],
+        }
+
     # --- 1. Student Profile ---
     if action_id == "student_profile":
         if not student:
