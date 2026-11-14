@@ -107,84 +107,84 @@ def get_student_menu(for_user: str = None) -> dict:
         options.append({
             "id": "event_checkin",
             "label": "🎟️ Event Check-In",
-            "desc": "Confirm your presence at the EGS orientation",
-            "action": "call_action",
+            "desc": "Confirm presence at orientation",
+            "action": "event_checkin",
         })
 
     # 2. Stage-Specific Primary Action
     if "DREAM" in stage:
         options.append({
             "id": "explore_careers",
-            "label": "💭 Explore Dream Careers",
-            "desc": "Select up to 5 aspirational career paths",
-            "action": "call_action",
+            "label": "💭 Explore Careers",
+            "desc": "Select up to 5 aspirational paths",
+            "action": "explore_careers",
         })
     elif "DISCOVER" in stage:
         options.append({
             "id": "view_shortlist",
-            "label": "📋 View Shortlisted Careers",
-            "desc": "Inspect and refine your top career choices",
-            "action": "call_action",
+            "label": "📋 View Shortlist",
+            "desc": "Inspect & refine career choices",
+            "action": "view_shortlist",
         })
         options.append({
             "id": "advance_decide",
-            "label": "🎯 Finalize Career Decision",
-            "desc": "Lock in your final career path & promise",
-            "action": "call_action",
+            "label": "🎯 Finalize Decision",
+            "desc": "Lock in career path & promise",
+            "action": "advance_decide",
         })
     elif "DECIDE" in stage:
         options.append({
             "id": "view_commitment",
-            "label": "🎯 My Chosen Career & Promise",
-            "desc": "Inspect your chosen goal & vision statement",
-            "action": "call_action",
+            "label": "🎯 Chosen Career",
+            "desc": "Inspect goal & vision statement",
+            "action": "view_commitment",
         })
         options.append({
             "id": "advance_develop",
-            "label": "🚀 Advance to DEVELOP Stage",
-            "desc": "Unlock mentorship & skill milestones",
-            "action": "call_action",
+            "label": "🚀 Advance to DEVELOP",
+            "desc": "Unlock mentorship & milestones",
+            "action": "advance_develop",
         })
     elif "DEVELOP" in stage:
         options.append({
             "id": "mentorship",
-            "label": "🤝 Mentorship & Milestones",
-            "desc": "View your mentor match and progress",
-            "action": "call_action",
+            "label": "🤝 Mentorship",
+            "desc": "View mentor match & progress",
+            "action": "mentorship",
         })
     elif "DELIVER" in stage:
         options.append({
             "id": "certificates",
-            "label": "🏆 Accomplishments & Certificates",
-            "desc": "View validated milestones and achievements",
-            "action": "call_action",
+            "label": "🏆 Accomplishments",
+            "desc": "View validated certificates",
+            "action": "certificates",
         })
 
     # 3. Universal Student Services
     options.append({
         "id": "student_profile",
-        "label": "👤 My Student Profile",
+        "label": "👤 Student Profile",
         "desc": "View academic & contact details",
-        "action": "call_action",
+        "action": "student_profile",
     })
     options.append({
         "id": "coordinator_help",
-        "label": "🆘 Need Help / Contact Coordinator",
-        "desc": "Raise an escalation ticket with your cohort lead",
-        "action": "call_action",
+        "label": "🆘 Coordinator Help",
+        "desc": "Raise ticket with cohort lead",
+        "action": "coordinator_help",
     })
     options.append({
         "id": "open_webapp",
-        "label": "📱 Open Dream Big WebApp",
+        "label": "📱 Open WebApp",
         "desc": "Interactive PWA Dashboard",
-        "action": "open_url",
+        "action": "open_webapp",
         "url": f"{get_url()}/my-dream-big?id={stu_id}&key={token}",
     })
 
     # 4. Logout / Switch User
     options.append({
         "id": "logout",
-        "label": "🚪 Logout / Switch Account",
+        "label": "🚪 Logout",
         "desc": "Unlink this chat account",
         "action": "logout",
     })
