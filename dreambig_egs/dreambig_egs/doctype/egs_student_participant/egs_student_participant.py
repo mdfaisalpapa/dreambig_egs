@@ -314,7 +314,7 @@ def resend_magic_link(email):
 	}
 
 
-def process_student_checkin(doc):
+def process_student_checkin(doc, qr_passcode=None):
 	event = None
 	if doc.event:
 		event = frappe.get_doc("EGS Event", doc.event)
@@ -325,7 +325,19 @@ def process_student_checkin(doc):
 			doc.event = open_events[0].name
 			event = frappe.get_doc("EGS Event", doc.event)
 
-	# 1. Digital check-in validation
+	# 1. Event Date Validation: Check-in is allowed on the event date
+	if event and event.event_date:
+		today_str = str(frappe.utils.today())
+		event_date_str = str(event.event_date)[:10]
+		if today_str != event_date_str:
+			frappe.throw(
+				_("Event check-in is only allowed on the day of the event ({0}). Today is {1}.").format(
+					event_date_str, today_str
+				),
+				frappe.ValidationError,
+			)
+
+	# 2. Digital check-in validation
 	if event and not event.allow_digital_checkins:
 		frappe.throw(
 			_("Digital check-ins are not enabled for this event."),
@@ -335,8 +347,9 @@ def process_student_checkin(doc):
 	already_checked_in = (doc.event_status == "Checked-In")
 	doc.event_status = "Checked-In"
 	doc.physical_attendance = 1
-	if getattr(doc, "current_5ds_stage", None) in (None, "", "DREAM"):
-		doc.current_5ds_stage = "DISCOVER"
+	# On check-in, student enters Stage 1: DREAM to shortlist 5 career goals
+	if getattr(doc, "current_5ds_stage", None) in (None, ""):
+		doc.current_5ds_stage = "DREAM"
 
 	# 2. Digital food coupon issuance
 	coupon_issued = False
@@ -478,11 +491,294 @@ def save_career_goals(student_id, token, goals):
 	for g in goals:
 		doc.append("top_5_career_goals", {"career_pathway": g})
 
+	# If student selected 5 goals and is currently in DREAM stage, advance to Stage 2: DISCOVER
+	if len(goals) == 5 and (not doc.current_5ds_stage or doc.current_5ds_stage == "DREAM"):
+		doc.current_5ds_stage = "DISCOVER"
+
 	doc.save(ignore_permissions=True)
 	frappe.db.commit()
 	return {
 		"status": "success",
-		"message": "Your career goals have been updated successfully!",
+		"message": "Your 5 Dream Big Career Goals have been saved successfully! Advanced to Stage 2: DISCOVER.",
+		"stage": doc.current_5ds_stage,
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def register_specific_session(student_id, token, session_id):
+	"""
+	Registers a student for a specific upcoming EGS/APSWB Online Session.
+	"""
+	if not student_id or not token or not session_id:
+		frappe.throw(_("Missing required parameters."), frappe.PermissionError)
+
+	doc = frappe.get_doc("EGS Student Participant", student_id)
+	if doc.access_token != token:
+		frappe.throw(_("Invalid access token."), frappe.PermissionError)
+
+	if not frappe.db.exists("EGS Online Session", session_id):
+		frappe.throw(_("Session not found."), frappe.DoesNotExistError)
+
+	session_doc = frappe.get_doc("EGS Online Session", session_id)
+
+	# Check if already registered
+	existing = frappe.db.get_value(
+		"EGS Session Registration",
+		{"session": session_id, "student": student_id},
+		"name",
+	)
+	if existing:
+		return {
+			"status": "success",
+			"message": _("You are already registered for this session!"),
+			"session_id": session_id,
+			"meeting_link": session_doc.meeting_link,
+		}
+
+	reg = frappe.get_doc({
+		"doctype": "EGS Session Registration",
+		"session": session_id,
+		"student": student_id,
+		"registration_datetime": frappe.utils.now_datetime(),
+		"attendance_status": "Registered",
+	})
+	reg.insert(ignore_permissions=True)
+
+	# Mark general ap_session_registered on student profile
+	doc.ap_session_registered = 1
+	doc.ap_session_registration_date = frappe.utils.now_datetime()
+	doc.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	return {
+		"status": "success",
+		"message": _("Successfully registered for {0}!").format(session_doc.session_title),
+		"session_id": session_id,
+		"meeting_link": session_doc.meeting_link,
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def register_ap_sessions(student_id, token):
+	"""
+	Registers a student for APSWB Online Alternate Sunday Interactive Sessions
+	directly inside the app to track their engagement.
+	"""
+	if not student_id or not token:
+		frappe.throw(_("Missing required parameters."), frappe.PermissionError)
+
+	doc = frappe.get_doc("EGS Student Participant", student_id)
+	if doc.access_token != token:
+		frappe.throw(_("Invalid access token."), frappe.PermissionError)
+
+	doc.ap_session_registered = 1
+	doc.ap_session_registration_date = frappe.utils.now_datetime()
+	doc.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	return {
+		"status": "success",
+		"message": _("Successfully registered for APSWB Alternate Sunday Sessions!"),
+		"registered_date": str(doc.ap_session_registration_date),
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def register_with_coordinator(student_id, token, career_domain=None, coordinator_id=None, registered_goal=None, goal_slot=1):
+	"""
+	Registers the student with their chosen DREAM BIG Career Coordinator (of 10 broad domains),
+	linking to Choice 1 or Choice 2 of their front-runner narrowed career goals.
+	"""
+	if not student_id or not token:
+		frappe.throw(_("Missing required parameters."), frappe.PermissionError)
+
+	doc = frappe.get_doc("EGS Student Participant", student_id)
+	if doc.access_token != token:
+		frappe.throw(_("Invalid access token."), frappe.PermissionError)
+
+	if not career_domain and coordinator_id:
+		c_domain = frappe.db.get_value("EGS Coordinator", coordinator_id, "career_domain")
+		if c_domain:
+			career_domain = c_domain
+
+	if not career_domain:
+		frappe.throw(_("Please select a valid Career Coordinator or Domain."), frappe.ValidationError)
+
+	goal_slot = int(goal_slot or 1)
+
+	# Auto-assign matching coordinator for this domain if available
+	matched_coord = coordinator_id
+	if not matched_coord or not frappe.db.exists("EGS Coordinator", matched_coord):
+		coords = frappe.get_all("EGS Coordinator", filters={"career_domain": career_domain}, limit=1)
+		if coords:
+			matched_coord = coords[0].name
+
+	if goal_slot == 2:
+		frappe.db.set_value(
+			"EGS Student Participant",
+			student_id,
+			{
+				"chosen_career_domain_2": career_domain,
+				"assigned_career_coordinator_2": matched_coord,
+				"registered_coordinator_goal_2": registered_goal,
+			},
+			update_modified=False,
+		)
+		doc.chosen_career_domain_2 = career_domain
+		doc.assigned_career_coordinator_2 = matched_coord
+		doc.registered_coordinator_goal_2 = registered_goal
+	else:
+		doc.chosen_career_domain = career_domain
+		doc.assigned_career_coordinator = matched_coord
+		doc.save(ignore_permissions=True)
+		if registered_goal:
+			frappe.db.set_value("EGS Student Participant", student_id, "registered_coordinator_goal", registered_goal, update_modified=False)
+			doc.registered_coordinator_goal = registered_goal
+
+	frappe.db.commit()
+
+	assigned = matched_coord or "Assigned Domain Coordinator"
+	msg = _("Registered with {0} for {1}!").format(assigned, registered_goal or career_domain)
+	return {
+		"status": "success",
+		"message": msg,
+		"goal_slot": goal_slot,
+		"coordinator": assigned,
+		"domain": career_domain,
+		"registered_goal": registered_goal,
+	}
+
+
+def auto_match_coordinator_for_goal(goal_name, student_institution=None):
+	"""
+	Intelligently maps a career pathway to its corresponding broad domain and
+	auto-matches an accomplished DREAM BIG Career Coordinator.
+	"""
+	if not goal_name:
+		return None, None
+
+	goal_name_lower = goal_name.lower().strip()
+	pathway = frappe.db.get_value("EGS Career Pathway", goal_name, ["career_category", "career_group"], as_dict=True)
+	c_group = (pathway.career_group if pathway else "").lower()
+
+	matched_domain = None
+
+	if any(k in goal_name_lower for k in ("civil services", "ias/ips", "upsc cse")):
+		matched_domain = "Civil Services (UPSC CSE)"
+	elif any(k in goal_name_lower for k in ("defence", "army", "air staff", "naval staff", "paramilitary")):
+		matched_domain = "Defence and Uniformed Services"
+	elif any(k in goal_name_lower for k in ("judiciary", "lawyer", "judge", "legal", "supreme court", "high court")):
+		matched_domain = "Judiciary/Legal Profession"
+	elif any(k in goal_name_lower for k in ("state services", "provincial", "deputy collector", "dsp")):
+		matched_domain = "State/Provincial Civil Services"
+	elif any(k in goal_name_lower for k in ("global", "abroad", "foreign", "world bank", "imf", "unicef", "unesco", "who")):
+		matched_domain = "Higher Education & Research Abroad"
+	elif any(k in goal_name_lower for k in ("consulting", "think tank", "policy")):
+		matched_domain = "Consulting & Think tanks"
+	elif any(k in goal_name_lower for k in ("arts", "journalism", "sports", "author", "creative")):
+		matched_domain = "Arts, Journalism, Sports, and Creative Careers"
+	elif any(k in goal_name_lower for k in ("unicorn", "startup", "entrepreneur", "business", "manufactur", "company", "bank", "finance", "hospital", "school")):
+		matched_domain = "Entrepreneurship, Business and Institution Building"
+	elif any(k in goal_name_lower for k in ("isro", "drdo", "csir", "professor", "scientist", "academic", "research", "university", "aicte", "ugc", "icmr", "icar")):
+		matched_domain = "Higher Education & Research (India)"
+	elif "consulting" in c_group:
+		matched_domain = "Consulting & Think tanks"
+	elif "entrepreneurship" in c_group or "institution" in c_group or "trade" in c_group:
+		matched_domain = "Entrepreneurship, Business and Institution Building"
+	elif "academic" in c_group or "scientific" in c_group or "inventions" in c_group:
+		matched_domain = "Higher Education & Research (India)"
+	elif "defence" in c_group:
+		matched_domain = "Defence and Uniformed Services"
+	elif "arts" in c_group:
+		matched_domain = "Arts, Journalism, Sports, and Creative Careers"
+	elif "law" in c_group:
+		matched_domain = "Judiciary/Legal Profession"
+	elif "govt" in c_group:
+		matched_domain = "UPSC Specialized Services"
+	else:
+		matched_domain = "Entrepreneurship, Business and Institution Building"
+
+	# Match coordinator for this domain (prefer same institution if available)
+	coordinator_name = None
+	if student_institution:
+		local_coords = frappe.get_all("EGS Coordinator", filters={"career_domain": matched_domain, "institution": student_institution}, limit=1)
+		if local_coords:
+			coordinator_name = local_coords[0].name
+
+	if not coordinator_name:
+		coords = frappe.get_all("EGS Coordinator", filters={"career_domain": matched_domain}, limit=1)
+		if coords:
+			coordinator_name = coords[0].name
+
+	return matched_domain, coordinator_name
+
+
+@frappe.whitelist(allow_guest=True)
+def save_narrowed_goals(student_id, token, goal_1, goal_2=None):
+	"""
+	Saves the 1 or 2 front-runner narrowed career choices moving towards DECIDE stage,
+	and automatically matches DREAM BIG Career Coordinators for both choices.
+	"""
+	if not student_id or not token or not goal_1:
+		frappe.throw(_("Please select at least one front-runner career goal."), frappe.ValidationError)
+
+	doc = frappe.get_doc("EGS Student Participant", student_id)
+	if doc.access_token != token:
+		frappe.throw(_("Invalid access token."), frappe.PermissionError)
+
+	doc.narrow_goal_1 = goal_1
+	doc.narrow_goal_2 = goal_2 or None
+
+	# Auto-match Coordinator 1 for Choice 1
+	domain_1, coord_1 = auto_match_coordinator_for_goal(goal_1, doc.university_college)
+	doc.chosen_career_domain = domain_1
+	doc.assigned_career_coordinator = coord_1
+	doc.registered_coordinator_goal = goal_1
+
+	# Auto-match Coordinator 2 for Choice 2 (if selected)
+	if goal_2:
+		domain_2, coord_2 = auto_match_coordinator_for_goal(goal_2, doc.university_college)
+		frappe.db.set_value(
+			"EGS Student Participant",
+			student_id,
+			{
+				"chosen_career_domain_2": domain_2,
+				"assigned_career_coordinator_2": coord_2,
+				"registered_coordinator_goal_2": goal_2,
+			},
+			update_modified=False,
+		)
+		doc.chosen_career_domain_2 = domain_2
+		doc.assigned_career_coordinator_2 = coord_2
+		doc.registered_coordinator_goal_2 = goal_2
+	else:
+		frappe.db.set_value(
+			"EGS Student Participant",
+			student_id,
+			{
+				"chosen_career_domain_2": None,
+				"assigned_career_coordinator_2": None,
+				"registered_coordinator_goal_2": None,
+			},
+			update_modified=False,
+		)
+		doc.chosen_career_domain_2 = None
+		doc.assigned_career_coordinator_2 = None
+		doc.registered_coordinator_goal_2 = None
+
+	doc.save(ignore_permissions=True)
+	frappe.db.set_value("EGS Student Participant", student_id, "registered_coordinator_goal", goal_1, update_modified=False)
+	frappe.db.commit()
+
+	return {
+		"status": "success",
+		"message": _("Front-runner goals saved! Coordinators automatically matched by the system."),
+		"narrow_goal_1": doc.narrow_goal_1,
+		"narrow_goal_2": doc.narrow_goal_2,
+		"coordinator_1": coord_1,
+		"domain_1": domain_1,
+		"coordinator_2": doc.assigned_career_coordinator_2,
+		"domain_2": doc.chosen_career_domain_2,
 	}
 
 
@@ -996,6 +1292,140 @@ def advance_to_deliver(student_id, token):
 		"message": _("Congratulations! You have advanced to Stage 5: DELIVER."),
 		"current_5ds_stage": "DELIVER",
 	}
+
+
+def calculate_success_framework_score(student_doc):
+	"""
+	Calculates the Student Success Framework Index (0-100%) based on the 3-tier matrix:
+	- Tier 1: Student Micro Check-in / Habits (Daily newspaper, Routine, Skills, PYQ, Peer forum) -> Up to 35 pts
+	- Tier 2: System Activity (Checked-in, 5 goals saved, narrow goals selected, APSWB session registered, DECIDE reached) -> Up to 35 pts
+	- Tier 3: DB Career Coordinator Evaluation (Clarity, Discipline, Mindset - 1-5 scale) -> Up to 30 pts
+	"""
+	score = 0
+
+	# --- Tier 1: Habits & Self-Assessment (35 pts max) ---
+	# 1. Daily newspaper reading: 7 pts
+	if getattr(student_doc, "sf_daily_newspaper", 0):
+		score += 7
+	# 2. Time management & routine discipline: rating 1 to 5 -> 7 pts max
+	routine_val = int(getattr(student_doc, "sf_routine_discipline", 3) or 3)
+	score += round((routine_val / 5.0) * 7)
+	# 3. Skill & AI acquisition: 7 pts
+	if getattr(student_doc, "sf_skill_learning", None):
+		score += 7
+	# 4. PYQ / Syllabus / Strengths reviewed: 7 pts
+	if getattr(student_doc, "sf_pyq_syllabus_reviewed", 0):
+		score += 7
+	# 5. Peer forum participation: 7 pts
+	if getattr(student_doc, "sf_peer_forum_active", 0):
+		score += 7
+
+	# --- Tier 2: Objective Milestones (35 pts max) ---
+	# Event Check-in verified: 7 pts
+	if student_doc.event_status == "Checked-In":
+		score += 7
+	# 5 goals selected: 7 pts
+	choices_count = frappe.db.count("EGS Student Career Choice", {"parent": student_doc.name})
+	if choices_count >= 5:
+		score += 7
+	# Registered with Career Coordinator / Narrowed goals in DISCOVER: 7 pts
+	if getattr(student_doc, "chosen_career_domain", None) or getattr(student_doc, "narrow_goal_1", None):
+		score += 7
+	# Attended / registered for APSWB online sessions: 7 pts
+	has_session_reg = frappe.db.exists("EGS Session Registration", {"student": student_doc.name}) or getattr(student_doc, "ap_session_registered", 0)
+	if has_session_reg:
+		score += 7
+	# Advanced to DECIDE or beyond: 7 pts
+	if student_doc.current_5ds_stage in ("DECIDE", "DEVELOP", "DEVELOP/PREPARE", "DELIVER"):
+		score += 7
+
+	# --- Tier 3: Coordinator Qualitative Review (30 pts max) ---
+	c_clarity = int(getattr(student_doc, "sf_coordinator_clarity", 3) or 3)
+	c_discipline = int(getattr(student_doc, "sf_coordinator_discipline", 3) or 3)
+	c_mindset = int(getattr(student_doc, "sf_coordinator_mindset", 3) or 3)
+	score += round((c_clarity / 5.0) * 10)
+	score += round((c_discipline / 5.0) * 10)
+	score += round((c_mindset / 5.0) * 10)
+
+	return min(max(int(score), 0), 100)
+
+
+@frappe.whitelist(allow_guest=True)
+def submit_success_framework_eval(student_id, access_key, daily_newspaper=0, routine_discipline=3, skill_learning="", pyq_syllabus_reviewed=0, peer_forum_active=0):
+	"""
+	Submits student monthly self-evaluation against the 5 Factors Success Framework.
+	Updates EGS Student Participant and logs entry in EGS Check-in Log.
+	"""
+	student = frappe.db.get_value("EGS Student Participant", student_id, ["name", "access_token"], as_dict=True)
+	if not student or student.access_token != access_key:
+		frappe.throw(_("Invalid or expired credentials."), frappe.PermissionError)
+
+	doc = frappe.get_doc("EGS Student Participant", student_id)
+	doc.sf_daily_newspaper = 1 if int(daily_newspaper or 0) else 0
+	doc.sf_routine_discipline = int(routine_discipline or 3)
+	doc.sf_skill_learning = (skill_learning or "").strip()
+	doc.sf_pyq_syllabus_reviewed = 1 if int(pyq_syllabus_reviewed or 0) else 0
+	doc.sf_peer_forum_active = 1 if int(peer_forum_active or 0) else 0
+	doc.sf_last_evaluated_date = frappe.utils.today()
+
+	new_score = calculate_success_framework_score(doc)
+	doc.success_framework_score = new_score
+
+	# Update database directly via db.set_value to ensure custom schema columns persist without DocType meta mismatch
+	frappe.db.set_value(
+		"EGS Student Participant",
+		student_id,
+		{
+			"sf_daily_newspaper": 1 if int(daily_newspaper or 0) else 0,
+			"sf_routine_discipline": int(routine_discipline or 3),
+			"sf_skill_learning": (skill_learning or "").strip(),
+			"sf_pyq_syllabus_reviewed": 1 if int(pyq_syllabus_reviewed or 0) else 0,
+			"sf_peer_forum_active": 1 if int(peer_forum_active or 0) else 0,
+			"sf_last_evaluated_date": frappe.utils.today(),
+			"success_framework_score": new_score,
+		},
+		update_modified=True,
+	)
+
+	# Log check-in record
+	try:
+		existing_logs = frappe.get_all("EGS Check-in Log", filters={"student_reference": student_id}, fields=["check_in_round"], order_by="check_in_round desc", limit=1)
+		next_round = (existing_logs[0].check_in_round + 1) if existing_logs else 1
+		
+		# Insert log record and update SF metrics
+		log_name = frappe.db.sql(
+			"""
+			INSERT INTO `tabEGS Check-in Log`
+			(name, creation, modified, modified_by, owner, docstatus, idx, student_reference, check_in_round, timestamp, triage_route, student_response, daily_newspaper, routine_discipline, skill_learning, pyq_syllabus_reviewed, peer_forum_active, framework_self_score)
+			VALUES (%s, NOW(6), NOW(6), 'Administrator', 'Administrator', 0, 0, %s, %s, NOW(6), %s, %s, %s, %s, %s, %s, %s, %s)
+			""",
+			(
+				f"LOG-{frappe.utils.now()[:4][-2:]}-{random.randint(1000, 9999)}",
+				student_id,
+				next_round,
+				"On track" if new_score >= 60 else "Stuck",
+				"Still deciding" if doc.current_5ds_stage in ("DREAM", "DISCOVER") else "Yes decided",
+				1 if int(daily_newspaper or 0) else 0,
+				int(routine_discipline or 3),
+				(skill_learning or "").strip(),
+				1 if int(pyq_syllabus_reviewed or 0) else 0,
+				1 if int(peer_forum_active or 0) else 0,
+				new_score,
+			)
+		)
+	except Exception:
+		pass
+
+	frappe.clear_document_cache("EGS Student Participant", student_id)
+	frappe.clear_cache(user="Guest")
+	frappe.db.commit()
+
+	return {
+		"status": "success",
+		"message": _("Your Success Framework evaluation has been saved! Current Score: {0}%").format(new_score),
+		"score": new_score,
+	}
+
 
 
 

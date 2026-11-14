@@ -15,6 +15,8 @@ from dreambig_egs.dreambig_egs.doctype.egs_student_participant.egs_student_parti
 	process_student_checkin,
 	get_cohort_whatsapp_link,
 	get_all_career_pathways,
+	submit_success_framework_eval,
+	calculate_success_framework_score,
 )
 from dreambig_egs.bot_engine.provider import BaseMessagingProvider
 
@@ -272,7 +274,13 @@ class EGS5DsWorkflowEngine:
 		curr_state = (self.session.current_conversation_state or "IDLE").upper()
 		active_stage = (student.current_5ds_stage or "DISCOVER").upper()
 
-		if curr_state.startswith("DECIDE_"):
+		if norm_input in ("SF_EVAL", "TAKE_SF_EVAL", "🌟 MONTHLY EVALUATION", "MONTHLY EVALUATION") or low_text in ("/eval", "/checkin", "eval", "evaluation") or "evaluation" in low_text:
+			self.start_sf_evaluation(student)
+			return
+
+		if curr_state.startswith("SF_"):
+			self.handle_sf_eval_flow(student, text, payload)
+		elif curr_state.startswith("DECIDE_"):
 			self.handle_decide_flow(student, text, payload)
 		elif curr_state.startswith("DEVELOP_"):
 			self.handle_develop_flow(student, text, payload)
@@ -663,6 +671,11 @@ class EGS5DsWorkflowEngine:
 			)
 			return
 
+		# Check for Success Framework Self-Evaluation trigger
+		if norm_input in ("SF_EVAL", "TAKE_SF_EVAL", "🌟 MONTHLY EVALUATION", "MONTHLY EVALUATION") or "evaluation" in text.lower():
+			self.start_sf_evaluation(student)
+			return
+
 		# Check for "Yes, decided" progression
 		if norm_input in ("DISCOVER_YES", "1", "① YES, DECIDED") or "decided" in text.lower() or text.lower() == "yes":
 			self.send_decide_prompt(student)
@@ -697,18 +710,22 @@ class EGS5DsWorkflowEngine:
 			buttons = [
 				{"id": "PROCEED_TO_DEVELOP", "title": "🚀 Proceed to Stage 4: DEVELOP"},
 				{"id": "DECIDE_WEBAPP", "title": "📱 DECIDE WebApp", "web_app": decide_webapp_url},
-				{"id": "REVERT_TO_DISCOVER", "title": "⏪ Revert to DISCOVER"},
+				{"id": "SF_EVAL", "title": "📝 Monthly Evaluation"},
+				{"id": "REVERT_TO_DISCOVER", "title": "🔄 Re-evaluate Goal"},
 				{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
 			]
 			self.set_conversation_state("IDLE")
 			self.session.save(ignore_permissions=True)
 			self.provider.send_interactive_message(
 				self.chat_id,
-				f"🎯 **Stage 3: DECIDE — A Promise to Self**\n\n"
-				f"• **Finalized Career Goal:** {student.final_chosen_career_goal}\n"
-				f"• **Vision:** \"{student.personal_vision_statement or 'Not recorded'}\"\n"
-				f"• **Promise to Self:** \"{student.a_promise_to_self or 'Not recorded'}\"\n\n"
-				f"Select an action to proceed with your journey, open your DECIDE WebApp, or revert:",
+				f"🎯 **Stage 3: DECIDE — A Promise to Self**\n"
+				f"*(Timeline: End of Year 1 / 1st Week of Year 2 - 2-Day Flagship Event)*\n\n"
+				f"• **Single Finalized Goal:** {student.final_chosen_career_goal}\n"
+				f"• **Vision Statement (The 'Why', Inspiration & Impact):**\n"
+				f"  \"{student.personal_vision_statement or 'Not recorded'}\"\n"
+				f"• **Promise to Self:**\n"
+				f"  \"{student.a_promise_to_self or 'Not recorded'}\"\n\n"
+				f"Select an action to proceed with your journey, open your DECIDE WebApp, or re-evaluate:",
 				buttons,
 			)
 			return
@@ -935,26 +952,34 @@ class EGS5DsWorkflowEngine:
 	# --- STAGE 4: DEVELOP FLOW ---
 	def send_develop_menu(self, student):
 		"""
-		Stage 4 Menu: [Add Commitment], [Update Progress], [🚀 Proceed to Stage 5: DELIVER], [⏪ Revert to DECIDE], [👤 My Profile], [Need Help].
+		Stage 4 Menu: [Add Milestone], [Daily Routine Check], [Structured Mentoring], [Update Progress], [Proceed to DELIVER], [Refine Goal], [👤 My Profile], [Need Help].
 		"""
 		develop_webapp_url = f"{get_url()}/my-dream-big?id={student.name}&key={student.access_token}#develop"
 		checkin_log_url = f"{get_url()}/egs-check-in-log?id={student.name}&key={student.access_token}"
 		buttons = [
-			{"id": "DEVELOP_ADD_ACTION", "title": "Add Commitment"},
+			{"id": "DEVELOP_ADD_ACTION", "title": "➕ Add Milestone"},
+			{"id": "SF_EVAL", "title": "⏰ Daily Routine & SF"},
+			{"id": "DEVELOP_VIEW_MENTORING", "title": "🧭 Mentoring & Academies"},
 			{"id": "DEVELOP_UPDATE_PROGRESS", "title": "Update Progress"},
 			{"id": "DEVELOP_WEBAPP", "title": "📱 DEVELOP WebApp", "web_app": develop_webapp_url},
-			{"id": "CHECKIN_LOG_WEBAPP", "title": "📝 Progress Log WebApp", "web_app": checkin_log_url},
 			{"id": "PROCEED_TO_DELIVER", "title": "🚀 Proceed to Stage 5: DELIVER"},
-			{"id": "REVERT_TO_DECIDE", "title": "⏪ Revert to DECIDE"},
+			{"id": "REVERT_TO_DECIDE", "title": "🔄 Refine Goal (Core e)"},
 			{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
 			{"id": "DEVELOP_NEED_HELP", "title": "Need Help"},
 		]
 		goal_label = student.final_chosen_career_goal or "your chosen goal"
+		coord_name = student.assigned_career_coordinator or "Assigned DB Coordinator"
+		routine_status = "Disciplined" if getattr(student, "sf_routine_discipline", 0) >= 3 else "Needs Attention"
+
 		self.provider.send_interactive_message(
 			self.chat_id,
-			f"🚀 **Stage 4: DEVELOP — Action Plan**\n\n"
-			f"Goal: **{goal_label}**\n\n"
-			f"Manage your preparation milestones below:",
+			f"🚀 **Stage 4: DEVELOP/Prepare — Mentoring & Preparation**\n"
+			f"*(Begins once career goal is finalised — Alongside Academics)*\n\n"
+			f"• **Single Career Goal:** {goal_label}\n"
+			f"• **DB Coordinator:** {coord_name}\n"
+			f"• **Daily Fixed Routine:** {routine_status}\n"
+			f"• **5 Factors Success Index:** {getattr(student, 'success_framework_score', 0)}/100%\n\n"
+			f"Manage your joint action plan and milestones below:",
 			buttons,
 		)
 
@@ -1047,8 +1072,37 @@ class EGS5DsWorkflowEngine:
 			)
 			return
 
-		# 2. Revert to DECIDE trigger
-		if norm_input in ("REVERT_TO_DECIDE", "⏪ REVERT TO DECIDE") or "revert to decide" in text.lower():
+		# 1.1 View Mentoring & Coaching Academies (Core Activity b)
+		if norm_input in ("DEVELOP_VIEW_MENTORING", "MENTORING", "ACADEMIES") or "mentor" in text.lower() or "academy" in text.lower():
+			coord_name = student.assigned_career_coordinator or "Assigned DB Coordinator"
+			coord_doc = frappe.db.get_value("EGS Coordinator", coord_name, ["coordinator_name", "career_domain", "institution", "contact_number", "designation", "role"], as_dict=True) if coord_name else None
+
+			coord_info = f"**Coordinator:** {coord_name}\n"
+			if coord_doc:
+				coord_info += f"• **Institution:** {coord_doc.institution or 'EGS Panel'}\n"
+				if coord_doc.designation:
+					coord_info += f"• **Designation:** {coord_doc.designation}\n"
+				if coord_doc.contact_number:
+					coord_info += f"• **Contact:** {coord_doc.contact_number}\n"
+
+			msg = (
+				f"🧭 **Stage 4: Structured Mentoring & Academies Network**\n\n"
+				f"{coord_info}\n"
+				f"🏛️ **Coaching Academies Collaboration:**\n"
+				f"Need-based partnerships with top coaching institutes including **equity safeguards** (subsidized seats, curated test-series sponsorships).\n\n"
+				f"👥 **Alumni & Peer Forums:**\n"
+				f"Active interaction with successful alumni and career-specific study circles."
+			)
+			buttons = [
+				{"id": "DEVELOP_ADD_ACTION", "title": "➕ Add Milestone"},
+				{"id": "SF_EVAL", "title": "📝 Monthly Evaluation"},
+				{"id": "BACK_TO_MENU", "title": "⏪ Back to Menu"},
+			]
+			self.provider.send_interactive_message(self.chat_id, msg, buttons)
+			return
+
+		# 2. Revert to DECIDE trigger (Core Activity e: Freedom to Revise or Refine Career Goal)
+		if norm_input in ("REVERT_TO_DECIDE", "⏪ REVERT TO DECIDE", "REFINE GOAL", "REVISE GOAL", "🔄 REFINE GOAL (CORE E)") or "refine" in text.lower() or "revert to decide" in text.lower():
 			try:
 				step_back_stage(student_id=student.name, token=student.access_token, target_stage="DECIDE")
 				student.reload()
@@ -1290,21 +1344,28 @@ class EGS5DsWorkflowEngine:
 	# --- STAGE 5: DELIVER FLOW ---
 	def send_deliver_menu(self, student):
 		"""
-		Stage 5 Menu: [Log Accomplishment], [DELIVER WebApp], [⏪ Revert to DEVELOP], [👤 My Profile].
+		Stage 5 Menu: [Log Accomplishment], [Post-Grad & Factors], [🔄 Flywheel Mentorship], [DELIVER WebApp], [⏪ Revert to DEVELOP], [👤 My Profile].
 		"""
 		deliver_webapp_url = f"{get_url()}/my-dream-big?id={student.name}&key={student.access_token}#deliver"
 		buttons = [
-			{"id": "DELIVER_LOG_ACC", "title": "Log Accomplishment"},
+			{"id": "DELIVER_LOG_ACC", "title": "🏆 Log Accomplishment"},
+			{"id": "DELIVER_VIEW_FLYWHEEL", "title": "🔄 Flywheel Mentorship"},
+			{"id": "SF_EVAL", "title": "📝 Factors 3,4,5 Check"},
 			{"id": "DELIVER_WEBAPP", "title": "📱 DELIVER WebApp", "web_app": deliver_webapp_url},
 			{"id": "REVERT_TO_DEVELOP", "title": "⏪ Revert to DEVELOP"},
 			{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
 		]
 		goal_label = student.final_chosen_career_goal or "your career goal"
+		degree_info = f"{student.course or 'Degree'} ({student.university_college or 'University'})"
 		self.provider.send_interactive_message(
 			self.chat_id,
-			f"🎓 **Stage 5: DELIVER — Achievement Milestone**\n\n"
-			f"Congratulations, **{student.student_name}**! You have reached the delivery stage for **{goal_label}**.\n\n"
-			f"Record your milestones or manage your stage below:",
+			f"🎓 **Stage 5: DELIVER & GIVE BACK — Intense Preparation & Leadership**\n"
+			f"*(Timeline: Throughout remaining undergraduate years and beyond)*\n\n"
+			f"• **Objective:** Turn aspirants into achievers / leaders and absorb them as mentors\n"
+			f"• **Goal Benchmark:** {goal_label}\n"
+			f"• **Academic Focus:** Dual Excellence ({degree_info})\n"
+			f"• **Flywheel Status:** Active Leadership Candidate\n\n"
+			f"Record your milestones or manage your leadership journey below:",
 			buttons,
 		)
 
@@ -1330,6 +1391,24 @@ class EGS5DsWorkflowEngine:
 			except Exception as e:
 				frappe.log_error(f"Step back to DEVELOP failed: {e}", "Bot Workflow DELIVER")
 				self.provider.send_text(self.chat_id, f"⚠️ Unable to step back: {e}")
+			return
+
+		# 1.1 View Flywheel Mentorship & Give Back (Core Activity d)
+		if norm_input in ("DELIVER_VIEW_FLYWHEEL", "FLYWHEEL", "GIVE BACK", "MENTOR JUNIORS") or "flywheel" in text.lower():
+			msg = (
+				"🔄 **The DREAM BIG Flywheel Effect (Core Activity d)**\n\n"
+				"• **Objective:** Turn successful candidates & alumni into mentors for junior batches entering Stages 1, 2, and 3.\n\n"
+				"🤝 **Your Flywheel Roles:**\n"
+				"1. **Peer Forum Guidance:** Host AMA strategy discussions for junior aspirants.\n"
+				"2. **Resource Sharing:** Share verified notes, mock tests, and interview insights.\n"
+				"3. **Campus Ambassadorship:** Represent EGS:DB as an inspiring alumni leader."
+			)
+			buttons = [
+				{"id": "DELIVER_LOG_ACC", "title": "🏆 Log Accomplishment"},
+				{"id": "SF_EVAL", "title": "📝 Factors 3,4,5 Check"},
+				{"id": "BACK_TO_MENU", "title": "⏪ Back to Menu"},
+			]
+			self.provider.send_interactive_message(self.chat_id, msg, buttons)
 			return
 
 		# 2. Log Accomplishment trigger
@@ -1466,6 +1545,178 @@ class EGS5DsWorkflowEngine:
 
 		# Default Stage 5 Menu
 		self.send_deliver_menu(student)
+
+	# --- 5 FACTORS SUCCESS FRAMEWORK EVALUATION FLOW (FACTORS 1 TO 5) ---
+	def start_sf_evaluation(self, student):
+		"""
+		Starts the interactive step-by-step 5 Factors Success Framework evaluation.
+		Factor 1: Daily Newspaper
+		Factor 2: Routine Discipline (1-5)
+		Factor 3: Skill / AI Learning
+		Factor 4: PYQs & Exam Syllabus Analysis
+		Factor 5: Active Peer Forum Engagement
+		"""
+		self.set_conversation_state("SF_AWAITING_NEWSPAPER")
+		self.session.clear_context()
+		self.session.save(ignore_permissions=True)
+
+		buttons = [
+			{"id": "SF_NEWS_YES", "title": "Yes, Daily"},
+			{"id": "SF_NEWS_NO", "title": "No / Rarely"},
+			{"id": "BACK_TO_MENU", "title": "⏪ Cancel"},
+		]
+		self.provider.send_interactive_message(
+			self.chat_id,
+			"🌟 **Students Success Framework — Monthly Check-in (1/5)**\n\n"
+			"**Factor 1: General Awareness & Knowledge**\n"
+			"Do you read a standard daily national newspaper or editorial analysis regularly?",
+			buttons,
+		)
+
+	def handle_sf_eval_flow(self, student, text: str, payload: str):
+		curr_state = self.session.current_conversation_state or "IDLE"
+		norm_input = (payload or text).strip().upper()
+		ctx = self.session.get_context_data()
+
+		# Step 1: Newspaper
+		if curr_state == "SF_AWAITING_NEWSPAPER":
+			is_yes = 1 if norm_input in ("SF_NEWS_YES", "YES", "YES, DAILY", "Y", "1") else 0
+			self.session.update_context({"sf_daily_newspaper": is_yes})
+			self.set_conversation_state("SF_AWAITING_ROUTINE")
+			self.session.save(ignore_permissions=True)
+
+			buttons = [
+				{"id": "SF_ROUTINE_5", "title": "⭐⭐⭐⭐⭐ High (5/5)"},
+				{"id": "SF_ROUTINE_4", "title": "⭐⭐⭐⭐ Good (4/5)"},
+				{"id": "SF_ROUTINE_3", "title": "⭐⭐⭐ Moderate (3/5)"},
+				{"id": "SF_ROUTINE_2", "title": "⭐⭐ Low (2/5)"},
+				{"id": "BACK_TO_MENU", "title": "⏪ Cancel"},
+			]
+			self.provider.send_interactive_message(
+				self.chat_id,
+				"🌟 **Success Framework Check-in (2/5)**\n\n"
+				"**Factor 2: Time Management & Fixed Routine**\n"
+				"How strictly do you maintain a fixed daily schedule balancing regular college degree studies alongside competitive preparation?",
+				buttons,
+			)
+			return
+
+		# Step 2: Routine
+		if curr_state == "SF_AWAITING_ROUTINE":
+			routine_val = 3
+			for r in (5, 4, 3, 2, 1):
+				if str(r) in norm_input:
+					routine_val = r
+					break
+			self.session.update_context({"sf_routine_discipline": routine_val})
+			self.set_conversation_state("SF_AWAITING_SKILL")
+			self.session.save(ignore_permissions=True)
+
+			buttons = [{"id": "BACK_TO_MENU", "title": "⏪ Cancel"}]
+			self.provider.send_interactive_message(
+				self.chat_id,
+				"🌟 **Success Framework Check-in (3/5)**\n\n"
+				"**Factor 3: Skill Building & Internships**\n"
+				"What specialized technical skill, certification, AI tool, or internship are you currently learning or pursuing?\n"
+				"*(Reply with skill name or 'None' if not started yet)*:",
+				buttons,
+			)
+			return
+
+		# Step 3: Skill
+		if curr_state == "SF_AWAITING_SKILL":
+			skill_val = text.strip()
+			if not skill_val:
+				skill_val = "Specialized Preparation"
+			self.session.update_context({"sf_skill_learning": skill_val})
+			self.set_conversation_state("SF_AWAITING_PYQ")
+			self.session.save(ignore_permissions=True)
+
+			buttons = [
+				{"id": "SF_PYQ_YES", "title": "Yes, Thoroughly"},
+				{"id": "SF_PYQ_NO", "title": "Not Yet / In Progress"},
+				{"id": "BACK_TO_MENU", "title": "⏪ Cancel"},
+			]
+			self.provider.send_interactive_message(
+				self.chat_id,
+				"🌟 **Success Framework Check-in (4/5)**\n\n"
+				"**Factor 4: Exam Rigor & Analysis**\n"
+				"Have you reviewed the complete competitive syllabus and solved/analyzed past 5–10 years question papers (PYQs)?",
+				buttons,
+			)
+			return
+
+		# Step 4: PYQs
+		if curr_state == "SF_AWAITING_PYQ":
+			is_pyq = 1 if norm_input in ("SF_PYQ_YES", "YES", "YES, THOROUGHLY", "Y", "1") else 0
+			self.session.update_context({"sf_pyq_syllabus_reviewed": is_pyq})
+			self.set_conversation_state("SF_AWAITING_PEER")
+			self.session.save(ignore_permissions=True)
+
+			buttons = [
+				{"id": "SF_PEER_YES", "title": "Yes, Actively"},
+				{"id": "SF_PEER_NO", "title": "No / Inactive"},
+				{"id": "BACK_TO_MENU", "title": "⏪ Cancel"},
+			]
+			self.provider.send_interactive_message(
+				self.chat_id,
+				"🌟 **Success Framework Check-in (5/5)**\n\n"
+				"**Factor 5: Peer Forum & Collaborative Learning**\n"
+				"Are you actively participating in your career peer forum, exchanging study notes, and resolving doubts?",
+				buttons,
+			)
+			return
+
+		# Step 5: Peer Forum & Submission
+		if curr_state == "SF_AWAITING_PEER":
+			is_peer = 1 if norm_input in ("SF_PEER_YES", "YES", "YES, ACTIVELY", "Y", "1") else 0
+			ctx = self.session.get_context_data()
+
+			daily_news = ctx.get("sf_daily_newspaper", 0)
+			routine_disc = ctx.get("sf_routine_discipline", 3)
+			skill_val = ctx.get("sf_skill_learning", "")
+			is_pyq = ctx.get("sf_pyq_syllabus_reviewed", 0)
+
+			try:
+				submit_success_framework_eval(
+					student_id=student.name,
+					access_key=student.access_token,
+					daily_newspaper=daily_news,
+					routine_discipline=routine_disc,
+					skill_learning=skill_val,
+					pyq_syllabus_reviewed=is_pyq,
+					peer_forum_active=is_peer,
+				)
+				student.reload()
+				score = calculate_success_framework_score(student)
+
+				self.session.clear_context()
+				self.set_conversation_state("IDLE")
+				self.session.save(ignore_permissions=True)
+
+				buttons = [
+					{"id": "VIEW_PROFILE", "title": "👤 My Profile"},
+					{"id": "BACK_TO_MENU", "title": "⏪ Main Menu"},
+				]
+				self.provider.send_interactive_message(
+					self.chat_id,
+					f"🎉 **Monthly Evaluation Saved!**\n\n"
+					f"• **New Success Framework Score:** **{score}/100%**\n"
+					f"• **Daily Newspaper:** {'✓ Yes' if daily_news else 'Needs Attention'}\n"
+					f"• **Routine Discipline:** {routine_disc}/5\n"
+					f"• **Skill Focus:** {skill_val}\n"
+					f"• **PYQs & Syllabus:** {'✓ Thorough' if is_pyq else 'In Progress'}\n"
+					f"• **Peer Forum Engagement:** {'✓ Active' if is_peer else 'Inactive'}\n\n"
+					f"Your progress has been logged in your official check-in record.",
+					buttons,
+				)
+			except Exception as e:
+				frappe.log_error(f"Failed to submit SF evaluation via bot: {e}", "Bot SF Eval")
+				self.provider.send_text(
+					self.chat_id,
+					f"⚠️ Unable to record self-evaluation: {e}\nPlease type `/reset` to retry.",
+				)
+			return
 
 
 def process_bot_message(session, message_data: dict, provider: BaseMessagingProvider):

@@ -20,7 +20,7 @@
         📱 <b>Mobile Users:</b> Tap your browser menu and select <b>"Add to Home Screen"</b> to install this dashboard as an app for your 2-year journey!
     </div>
 
-    <!-- 2. Header & Welcome Card -->
+    <!-- 2. Header & Welcome Card with Integrated Journey Timeline -->
     <div class="card shadow-sm border-0 mb-4 text-white p-4" style="border-radius: 12px; background: linear-gradient(135deg, #0d6efd 0%, #003e9c 100%);">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div>
@@ -33,38 +33,96 @@
             </div>
             <div class="mt-3 mt-md-0 text-md-end">
                 <span class="badge bg-light text-dark px-3 py-2" style="font-size: 0.9rem;">ID: {{ student.name }}</span>
+                {% if current_stage_num == 1 %}
                 <span class="badge {% if student.event_status == 'Checked-In' %}bg-success{% else %}bg-warning text-dark{% endif %} px-3 py-2 ms-1" style="font-size: 0.9rem;">
                     {{ student.event_status or "Registered" }}
                 </span>
+                {% else %}
+                <span class="badge bg-info text-dark px-3 py-2 ms-1 font-weight-bold" style="font-size: 0.9rem;">
+                    Stage {{ current_stage_num }}: {{ active_stage }}
+                </span>
+                {% endif %}
             </div>
         </div>
-    </div>
 
-    <!-- Digital Food Coupon Card -->
-    {% if student.food_coupon_issued and student.food_coupon_code %}
-    <div class="card shadow-sm border-0 mb-4 p-3 px-4" style="border-radius: 12px; background: #f0fdf4; border: 1.5px dashed #16a34a !important;">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex align-items-center">
-                <span style="font-size: 2.2rem;" class="me-3">🍔</span>
+        <!-- Integrated Journey Timeline Bar -->
+        <div class="mt-4 pt-3 border-top border-white-50">
+            <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
                 <div>
-                    <h5 class="text-success font-weight-bold mb-0">Digital Food Coupon</h5>
-                    <small class="text-muted">Present this code at the event lunch counter.</small>
+                    <span class="text-uppercase small font-weight-bold text-white-50">⏳ Journey Timeline</span>
+                    <span class="text-white ms-2 font-weight-bold" style="font-size: 0.95rem;">
+                        {% if event and event.event_date %}
+                        {{ days_since_event }} Days ({{ months_since_event }} Months) Elapsed
+                        {% else %}
+                        Ongoing Journey
+                        {% endif %}
+                    </span>
+                </div>
+                <div>
+                    <span class="badge bg-white text-primary px-3 py-1 font-weight-bold" style="font-size: 0.8rem;">
+                        {% if days_since_event == 0 %}
+                        Orientation Day
+                        {% elif days_since_event <= 30 %}
+                        Month 1: Early Discovery & Habit Building
+                        {% elif days_since_event <= 60 %}
+                        Month 2: Researching & Narrowing Choices
+                        {% elif days_since_event <= 90 %}
+                        Month 3: Decision Commitment (DECIDE)
+                        {% elif days_since_event <= 365 %}
+                        Year 1: Deep Preparation & Mentorship
+                        {% else %}
+                        Year 2: Competitive Excellence & Delivery
+                        {% endif %}
+                    </span>
                 </div>
             </div>
-            <div class="mt-2 mt-md-0">
-                <span class="badge bg-success font-monospace px-3 py-2" style="font-size: 1.2rem; letter-spacing: 2px;">
-                    {{ student.food_coupon_code }}
-                </span>
+            <div class="progress" style="height: 8px; border-radius: 4px; background-color: rgba(255,255,255,0.25);">
+                {% set progress_pct = ((days_since_event / 90.0) * 100) | round | int %}
+                {% if progress_pct > 100 %}{% set progress_pct = 100 %}{% endif %}
+                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ progress_pct }}%;" aria-valuenow="{{ progress_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between text-white-50 small mt-1" style="font-size: 0.75rem;">
+                <span>Event Check-in</span>
+                <span>Month 1 (Exploration)</span>
+                <span>Month 2 (Narrowing)</span>
+                <span>Month 3 (DECIDE Milestone)</span>
+            </div>
+        </div>
+
+        <!-- Integrated Success Framework Meter & Micro-Evaluation Button -->
+        <div class="mt-3 pt-3 border-top border-white-50">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="badge bg-warning text-dark px-2 py-1 font-weight-bold" style="font-size: 0.8rem;">🌟 Success Framework Index</span>
+                    <span class="badge {% if success_framework_score >= 75 %}bg-success{% elif success_framework_score >= 50 %}bg-light text-primary{% else %}bg-warning text-dark{% endif %} font-monospace px-3 py-1 font-weight-bold" style="font-size: 1.1rem;">
+                        {{ success_framework_score }}%
+                    </span>
+                    <small class="text-white-50">
+                        {% if success_framework_score >= 75 %}
+                        Strong Preparation Track
+                        {% elif success_framework_score >= 50 %}
+                        Moderate Progress &bull; Keep Building Habits
+                        {% else %}
+                        Needs Habit Alignment
+                        {% endif %}
+                    </small>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-light text-primary font-weight-bold px-3 shadow-sm" data-toggle="modal" data-target="#successFrameworkModal" data-bs-toggle="modal" data-bs-target="#successFrameworkModal" style="border-radius: 6px;">
+                        ✍️ Take Monthly Self-Evaluation
+                    </button>
+                </div>
+            </div>
+            <div class="progress mt-2" style="height: 6px; border-radius: 3px; background-color: rgba(255,255,255,0.25);">
+                <div class="progress-bar {% if success_framework_score >= 75 %}bg-success{% elif success_framework_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ success_framework_score }}%;" aria-valuenow="{{ success_framework_score }}" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
         </div>
     </div>
-    {% endif %}
 
     <!-- 3. 5Ds Framework Journey Stages (Tab Navigation) -->
     <div class="card shadow-sm border-0 mb-4 p-3" style="border-radius: 12px;">
         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3 flex-wrap">
             <h5 class="font-weight-bold text-dark mb-0">5Ds Journey Framework</h5>
-            <span class="badge bg-primary px-3 py-2 mt-1 mt-md-0" style="font-size: 0.85rem;">Active Stage: {{ active_stage }}</span>
         </div>
         <ul class="nav nav-pills nav-fill g-2 text-center" id="pills-tab" role="tablist">
             <!-- Stage 1: DREAM -->
@@ -72,7 +130,13 @@
                 <button class="nav-link w-100 p-2 text-dark border {% if active_stage == 'DREAM' %}active bg-primary text-white shadow-sm font-weight-bold{% else %}bg-light{% endif %}" id="pills-dream-tab" data-toggle="pill" data-target="#tab-dream" data-bs-toggle="pill" data-bs-target="#tab-dream" type="button" role="tab" aria-controls="tab-dream" aria-selected="{% if active_stage == 'DREAM' %}true{% else %}false{% endif %}" style="border-radius: 8px;">
                     <small class="text-uppercase d-block" style="font-size: 0.72rem;">Stage 1</small>
                     <b>DREAM</b>
-                    <span class="badge {% if active_stage == 'DREAM' %}bg-light text-primary{% else %}bg-success text-white{% endif %} d-block mt-1">✓ Complete</span>
+                    {% if student.event_status != 'Checked-In' %}
+                    <span class="badge bg-warning text-dark d-block mt-1">Pending Check-In</span>
+                    {% elif career_choices | length < 5 %}
+                    <span class="badge bg-light text-primary d-block mt-1">● Select 5 Goals</span>
+                    {% else %}
+                    <span class="badge bg-success text-white d-block mt-1">✓ Complete</span>
+                    {% endif %}
                 </button>
             </li>
 
@@ -83,6 +147,8 @@
                     <b>DISCOVER</b>
                     {% if student.event_status != 'Checked-In' %}
                     <span class="badge bg-warning text-dark d-block mt-1">Locked (Event)</span>
+                    {% elif career_choices | length < 5 %}
+                    <span class="badge bg-secondary text-white d-block mt-1">Locked (5 Goals)</span>
                     {% elif current_stage_num > 2 %}
                     <span class="badge bg-success text-white d-block mt-1">✓ Complete</span>
                     {% elif active_stage == 'DISCOVER' %}
@@ -141,13 +207,36 @@
 
         <!-- TAB 1: DREAM -->
         <div class="tab-pane fade {% if active_stage == 'DREAM' %}show active{% endif %}" id="tab-dream" role="tabpanel" aria-labelledby="pills-dream-tab">
+            <!-- Digital Food Coupon Card (Exclusive to DREAM / Event Stage) -->
+            {% if student.food_coupon_issued and student.food_coupon_code %}
+            <div class="card shadow-sm border-0 mb-4 p-3 px-4" style="border-radius: 12px; background: #f0fdf4; border: 1.5px dashed #16a34a !important;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap">
+                    <div class="d-flex align-items-center">
+                        <span style="font-size: 2.2rem;" class="me-3">🍔</span>
+                        <div>
+                            <h5 class="text-success font-weight-bold mb-0">Event Digital Food Coupon</h5>
+                            <small class="text-muted">Present this code at the event lunch counter on the event day.</small>
+                        </div>
+                    </div>
+                    <div class="mt-2 mt-md-0">
+                        <span class="badge bg-success font-monospace px-3 py-2" style="font-size: 1.2rem; letter-spacing: 2px;">
+                            {{ student.food_coupon_code }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Student Profile Header Card -->
             <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 12px;">
                 <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                    <h5 class="font-weight-bold text-dark mb-0">Stage 1: DREAM — Foundation & Aspiration</h5>
-                    <span class="badge bg-success px-3 py-2">✓ Registration Complete</span>
+                    <h5 class="font-weight-bold text-dark mb-0">Stage 1: DREAM — Foundation & On-the-spot Goal Selection</h5>
+                    <span class="badge {% if student.event_status == 'Checked-In' %}bg-success{% else %}bg-warning text-dark{% endif %} px-3 py-2">
+                        {% if student.event_status == 'Checked-In' %}✓ Event Attendance Verified{% else %}Pending Event Attendance{% endif %}
+                    </span>
                 </div>
                 <p class="text-muted">
-                    Welcome to the <b>EARLY GOAL SETTING: DREAM BIG</b> initiative! In this initial stage, you have taken the pledge to unlock your potential, aiming high without limitations.
+                    Welcome to the <b>EARLY GOAL SETTING: DREAM BIG</b> initiative! In this stage, you unlock your potential by setting audacious aspirations without self-imposed limitations. During the event, shortlist <b>5 Dream Big Career Goals</b> from 40+ paths across Employer and Employee categories.
                 </p>
                 <div class="row g-3 mt-2">
                     <div class="col-md-6">
@@ -172,48 +261,46 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- TAB 2: DISCOVER (Exercise 2) -->
-        <div class="tab-pane fade {% if active_stage == 'DISCOVER' %}show active{% endif %}" id="tab-discover" role="tabpanel" aria-labelledby="pills-discover-tab">
             {% if student.event_status != "Checked-In" %}
-            <!-- Locked State for Registered Students -->
+            <!-- Locked State for Registered Students Prior to Event Check-in -->
             <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 12px;">
-                <h5 class="font-weight-bold text-dark border-bottom pb-2 mb-3">Stage 2: DISCOVER — Explore DREAM BIG Career Goals</h5>
+                <h5 class="font-weight-bold text-dark border-bottom pb-2 mb-3">On-the-Spot Selection: 5 DREAM BIG Career Goals</h5>
                 <div class="alert alert-warning text-center">
-                    <h5>🔒 Goals Locked</h5>
-                    <p>Your 5 DREAM BIG Career Goals will unlock during <b>Exercise 2</b> at the physical event. Please scan the QR code at the venue to check in!</p>
+                    <h5>🔒 Career Goals Selection Locked</h5>
+                    <p class="mb-2">Your 5 DREAM BIG Career Goals shortlist will unlock during the physical event once your presence is confirmed.</p>
+                    <p class="small text-muted mb-0">Please scan the QR code pasted at the event venue or check in below on the event day.</p>
                 </div>
                 <div class="text-center pt-2">
                     <a href="/event-checkin?id={{ student_id }}&key={{ access_key }}" class="btn btn-outline-warning text-dark font-weight-bold px-4 py-2" style="border-radius: 8px;">
-                        📍 Simulate Event Check-In
+                        📍 Event Check-In
                     </a>
                 </div>
             </div>
             {% else %}
-            <!-- Unlocked State for Checked-In Students: Full Interactive Checklist -->
+            <!-- Unlocked State for Checked-In Students: Full Interactive Checklist in Stage 1 DREAM -->
             <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 12px;">
                 <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3 flex-wrap">
                     <div>
-                        <h5 class="font-weight-bold text-dark mb-0">Stage 2: DISCOVER — Select Your 5 DREAM BIG Career Goals (Exercise 2)</h5>
-                        <small class="text-muted">Choose up to 5 career pathways that represent your highest aspirations.</small>
+                        <h5 class="font-weight-bold text-dark mb-0">Select Your 5 DREAM BIG Career Goals</h5>
+                        <small class="text-muted">On-the-spot career selection exercise: shortlist exactly 5 goals from 40+ DREAM BIG pathways.</small>
                     </div>
                     <div class="mt-2 mt-md-0">
-                        <span class="badge {% if current_stage_num > 2 %}bg-secondary{% else %}bg-primary{% endif %} px-3 py-2" id="selected-counter" style="font-size: 0.9rem;">
-                            {{ career_choices | length }}/5 Selected {% if current_stage_num > 2 %}(Locked){% endif %}
+                        <span class="badge {% if current_stage_num > 1 and (career_choices | length >= 5) %}bg-secondary{% else %}bg-primary{% endif %} px-3 py-2" id="selected-counter" style="font-size: 0.9rem;">
+                            {{ career_choices | length }}/5 Selected {% if current_stage_num > 1 and (career_choices | length >= 5) %}(Locked){% endif %}
                         </span>
                     </div>
                 </div>
 
-                {% if current_stage_num > 2 %}
+                {% if current_stage_num > 1 and (career_choices | length >= 5) %}
                 <!-- Read-Only Banner for Past Stage -->
                 <div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 mb-3 border-0 shadow-sm" style="border-radius: 10px; background-color: #f1f5f9;">
                     <div class="d-flex align-items-center">
                         <span style="font-size: 1.5rem;" class="me-3">🔒</span>
                         <div>
                             <span class="badge bg-success me-2">✓ Stage Complete</span>
-                            <b>Stage 2 (DISCOVER) is Locked (Read-Only)</b>
-                            <p class="mb-0 text-muted small mt-1">You have advanced to the <b>DECIDE</b> stage. If you need to re-evaluate or modify your 5 goals under the Extended Discovery Track (Discover 2B), switch to the <b>DECIDE</b> tab and click <b>"Re-evaluate Goal (Return to DISCOVER)"</b>.</p>
+                            <b>Stage 1 (DREAM) Shortlist Saved</b>
+                            <p class="mb-0 text-muted small mt-1">You have selected your 5 goals and advanced to the <b>DISCOVER</b> stage.</p>
                         </div>
                     </div>
                 </div>
@@ -246,8 +333,8 @@
                                         {% set current_grp.name = p.career_group %}
                                     {% endif %}
                                     <div class="form-check d-flex align-items-start mb-2">
-                                        <input class="form-check-input pathway-checkbox flex-shrink-0 mt-1" type="checkbox" value="{{ p.name }}" id="chk_{{ loop.index }}" {% if p.name in selected_pathway_names %}checked{% endif %} {% if current_stage_num > 2 %}disabled{% endif %} style="width: 1.15em; height: 1.15em;">
-                                        <label class="form-check-label ms-2 mb-0" for="chk_{{ loop.index }}" style="font-size: 0.85rem; display: inline-block; cursor: {% if current_stage_num > 2 %}not-allowed{% else %}pointer{% endif %}; font-weight: normal; line-height: 1.4;">
+                                        <input class="form-check-input pathway-checkbox flex-shrink-0 mt-1" type="checkbox" value="{{ p.name }}" id="chk_{{ loop.index }}" {% if p.name in selected_pathway_names %}checked{% endif %} {% if current_stage_num > 1 and (career_choices | length >= 5) %}disabled{% endif %} style="width: 1.15em; height: 1.15em;">
+                                        <label class="form-check-label ms-2 mb-0" for="chk_{{ loop.index }}" style="font-size: 0.85rem; display: inline-block; cursor: {% if current_stage_num > 1 and (career_choices | length >= 5) %}not-allowed{% else %}pointer{% endif %}; font-weight: normal; line-height: 1.4;">
                                             {{ p.career_title }}
                                         </label>
                                     </div>
@@ -272,8 +359,8 @@
                                         {% set current_emp_grp.name = p.career_group %}
                                     {% endif %}
                                     <div class="form-check d-flex align-items-start mb-2">
-                                        <input class="form-check-input pathway-checkbox flex-shrink-0 mt-1" type="checkbox" value="{{ p.name }}" id="chk_{{ loop.index }}" {% if p.name in selected_pathway_names %}checked{% endif %} {% if current_stage_num > 2 %}disabled{% endif %} style="width: 1.15em; height: 1.15em;">
-                                        <label class="form-check-label ms-2 mb-0" for="chk_{{ loop.index }}" style="font-size: 0.85rem; display: inline-block; cursor: {% if current_stage_num > 2 %}not-allowed{% else %}pointer{% endif %}; font-weight: normal; line-height: 1.4;">
+                                        <input class="form-check-input pathway-checkbox flex-shrink-0 mt-1" type="checkbox" value="{{ p.name }}" id="chk_{{ loop.index }}" {% if p.name in selected_pathway_names %}checked{% endif %} {% if current_stage_num > 1 and (career_choices | length >= 5) %}disabled{% endif %} style="width: 1.15em; height: 1.15em;">
+                                        <label class="form-check-label ms-2 mb-0" for="chk_{{ loop.index }}" style="font-size: 0.85rem; display: inline-block; cursor: {% if current_stage_num > 1 and (career_choices | length >= 5) %}not-allowed{% else %}pointer{% endif %}; font-weight: normal; line-height: 1.4;">
                                             {{ p.career_title }}
                                         </label>
                                     </div>
@@ -283,21 +370,16 @@
                     </div>
                 </div>
 
-                {% if current_stage_num <= 2 %}
+                {% if current_stage_num <= 1 or (career_choices | length < 5) %}
                 <div class="text-center mt-4 pt-3 border-top d-flex justify-content-center flex-wrap gap-3">
                     <button id="btn-save-goals" class="btn btn-success btn-lg px-4 font-weight-bold" style="border-radius: 8px;">
                         💾 Save My 5 Career Goals
                     </button>
-                    {% if active_stage == 'DISCOVER' %}
-                    <button type="button" class="btn btn-primary btn-lg px-4 font-weight-bold" data-toggle="modal" data-target="#decideModal" data-bs-toggle="modal" data-bs-target="#decideModal" id="btn-open-decide-modal" style="border-radius: 8px;">
-                        🌟 Commit to DECIDE Stage
-                    </button>
-                    {% endif %}
                 </div>
                 {% else %}
                 <div class="text-center mt-4 pt-3 border-top">
                     <button class="btn btn-secondary btn-lg px-5 font-weight-bold" disabled style="border-radius: 8px;">
-                        🔒 Stage Locked (Read-Only)
+                        🔒 Goals Shortlist Saved
                     </button>
                 </div>
                 {% endif %}
@@ -305,77 +387,651 @@
             {% endif %}
         </div>
 
-        <!-- TAB 3: DECIDE (A Promise to Self) -->
-        <div class="tab-pane fade {% if active_stage == 'DECIDE' %}show active{% endif %}" id="tab-decide" role="tabpanel" aria-labelledby="pills-decide-tab">
+        <!-- TAB 2: DISCOVER -->
+        <div class="tab-pane fade {% if active_stage == 'DISCOVER' %}show active{% endif %}" id="tab-discover" role="tabpanel" aria-labelledby="pills-discover-tab">
+            {% if student.event_status != "Checked-In" or (career_choices | length < 5) %}
+            <!-- Locked State for DISCOVER -->
+            <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 12px;">
+                <h5 class="font-weight-bold text-dark border-bottom pb-2 mb-3">Stage 2: DISCOVER — Exploration & Coordinator Matching</h5>
+                <div class="alert alert-warning text-center">
+                    <h5>🔒 Stage 2 Locked</h5>
+                    {% if student.event_status != "Checked-In" %}
+                    <p class="mb-0">Please check in to the physical event to unlock Stage 1 (DREAM) and choose your 5 career goals.</p>
+                    {% else %}
+                    <p class="mb-0">Please select and save exactly <b>5 Dream Big Career Goals</b> in the <b>DREAM</b> tab first to unlock DISCOVER exploration.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <!-- Unlocked State for DISCOVER: Clean Tiled / Sub-Tabbed Layout -->
             <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 12px;">
                 <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3 flex-wrap">
-                    <h5 class="font-weight-bold text-dark mb-0">Stage 3: DECIDE — A Promise to Self</h5>
-                    {% if student.final_chosen_career_goal or (career_goal and career_goal.current_5ds_stage == 'DECIDE') %}
-                    <span class="badge bg-success px-3 py-2" style="font-size: 0.85rem;">✓ Stage Committed</span>
-                    {% else %}
-                    <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 0.85rem;">Pending Commitment</span>
-                    {% endif %}
+                    <div>
+                        <h5 class="font-weight-bold text-dark mb-0">Stage 2: DISCOVER — Self-Discovery & Deeper Exploration</h5>
+                        <small class="text-muted">Narrow 5 shortlisted goals to 1–2 well-researched choices with coordinators & peer circles.</small>
+                    </div>
+                    <div class="mt-2 mt-md-0">
+                        {% if current_stage_num > 2 %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-3 font-weight-bold" disabled style="border-radius: 6px; cursor: not-allowed;">
+                            🔒 Stage 2 Complete (Committed in DECIDE)
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-primary btn-sm px-3 font-weight-bold shadow-sm" data-toggle="modal" data-target="#decideModal" data-bs-toggle="modal" data-bs-target="#decideModal" id="btn-open-decide-modal" style="border-radius: 6px;">
+                            🌟 Ready to Commit (Stage 3: DECIDE)
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Stage 2 Sub-Nav Tiles / Tabs: Single Flex-Row Auto-Adjusted -->
+                <ul class="nav nav-pills d-flex flex-row flex-nowrap mb-4 p-1 bg-light rounded" id="discover-subtabs" role="tablist" style="border: 1px solid #e2e8f0; overflow-x: auto; gap: 6px;">
+                    <li class="nav-item flex-fill text-center" role="presentation" style="min-width: 0;">
+                        <button class="nav-link active font-weight-bold py-2 px-2 text-dark w-100 d-flex flex-column align-items-center justify-content-center text-truncate" id="subtab-goals-btn" data-toggle="pill" data-target="#subtab-goals" data-bs-toggle="pill" data-bs-target="#subtab-goals" type="button" role="tab" style="border-radius: 8px; font-size: 0.9rem;">
+                            <span class="text-truncate w-100">🎯 Narrow Goals & Coordinators</span>
+                            <span class="badge {% if student.narrow_goal_1 %}bg-success{% else %}bg-warning text-dark{% endif %} mt-1" style="font-size: 0.72rem;">
+                                {% if student.narrow_goal_1 %}✓ Auto-Matched{% else %}Action Required{% endif %}
+                            </span>
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill text-center" role="presentation" style="min-width: 0;">
+                        <button class="nav-link font-weight-bold py-2 px-2 text-dark w-100 d-flex flex-column align-items-center justify-content-center text-truncate" id="subtab-forums-btn" data-toggle="pill" data-target="#subtab-forums" data-bs-toggle="pill" data-bs-target="#subtab-forums" type="button" role="tab" style="border-radius: 8px; font-size: 0.9rem;">
+                            <span class="text-truncate w-100">🤝 Peer Forums & Circles</span>
+                            <span class="badge bg-primary text-white mt-1" style="font-size: 0.72rem;">{{ relevant_peer_forums | length }} Groups</span>
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill text-center" role="presentation" style="min-width: 0;">
+                        <button class="nav-link font-weight-bold py-2 px-2 text-dark w-100 d-flex flex-column align-items-center justify-content-center text-truncate" id="subtab-sessions-btn" data-toggle="pill" data-target="#subtab-sessions" data-bs-toggle="pill" data-bs-target="#subtab-sessions" type="button" role="tab" style="border-radius: 8px; font-size: 0.9rem;">
+                            <span class="text-truncate w-100">📡 Online APSWB Sessions</span>
+                            <span class="badge bg-info text-dark mt-1" style="font-size: 0.72rem;">{{ online_sessions | length }} Sessions</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Sub-Tab Panes Content -->
+                <div class="tab-content" id="discover-subtabs-content">
+
+                    <!-- TILE 1: Narrowing Down Form & Auto-Matched Coordinators -->
+                    <div class="tab-pane fade show active" id="subtab-goals" role="tabpanel" aria-labelledby="subtab-goals-btn">
+                        <!-- 1. Display Shortlisted 5 Goals & Narrowing Down Form -->
+                        <div class="p-3 bg-white border rounded mb-4 shadow-sm" style="border-left: 4px solid #0d6efd;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+                                <h6 class="font-weight-bold text-dark mb-0">🎯 Your 5 Shortlisted Career Pathways (From Stage 1: DREAM):</h6>
+                                <small class="text-muted">Target: Narrow to 1–2 Front-Runners</small>
+                            </div>
+                            <p class="text-muted small mb-3">
+                                Select your <b>1 or 2 primary front-runner goals</b> below. Saving your choices automatically pairs you with specialized DREAM BIG Career Coordinators.
+                            </p>
+                            <div class="row g-2 mb-3">
+                                {% for c in career_choices %}
+                                <div class="col-md-6">
+                                    <div class="p-2 bg-light rounded border d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary rounded-circle me-2" style="width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;">{{ loop.index }}</span>
+                                            <span class="font-weight-bold text-dark small">{{ c.career_pathway }}</span>
+                                        </div>
+                                        {% if c.career_pathway == student.narrow_goal_1 or c.career_pathway == student.narrow_goal_2 %}
+                                        <span class="badge bg-success ms-2">Front-Runner</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <form id="form-narrow-goals" class="p-3 bg-light rounded border" onsubmit="return false;">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-5">
+                                        <label class="form-label font-weight-bold small text-dark mb-1">⭐ Primary Front-Runner Goal (Choice 1) <span class="text-danger">*</span></label>
+                                        <select id="select_narrow_1" class="form-select form-control form-control-sm" required>
+                                            <option value="">-- Select from your 5 goals --</option>
+                                            {% for c in career_choices %}
+                                            <option value="{{ c.career_pathway }}" {% if student.narrow_goal_1 == c.career_pathway %}selected{% endif %}>{{ c.career_pathway }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label font-weight-bold small text-dark mb-1">🌟 Alternative Front-Runner Goal (Choice 2 - Optional)</label>
+                                        <select id="select_narrow_2" class="form-select form-control form-control-sm">
+                                            <option value="">-- Optional second choice --</option>
+                                            {% for c in career_choices %}
+                                            <option value="{{ c.career_pathway }}" {% if student.narrow_goal_2 == c.career_pathway %}selected{% endif %}>{{ c.career_pathway }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" id="btn-save-narrow-goals" class="btn btn-primary btn-sm w-100 font-weight-bold py-2 shadow-sm">
+                                            Save Choices
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="narrow-alert" class="alert d-none mt-2 mb-0 py-1 small text-center" role="alert"></div>
+                            </form>
+                        </div>
+
+                        <!-- System Auto-Matched Career Coordinators Card -->
+                        <div class="p-3 bg-white border rounded shadow-sm" style="border-left: 4px solid #198754;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+                                <div class="d-flex align-items-center">
+                                    <span style="font-size: 1.4rem;" class="me-2">👨‍🏫</span>
+                                    <div>
+                                        <h6 class="font-weight-bold text-success mb-0">System-Matched DREAM BIG Career Coordinators</h6>
+                                        <small class="text-muted">Auto-paired mentors based on your front-runner goals & academic anchor.</small>
+                                    </div>
+                                </div>
+                                <span class="badge {% if student.assigned_career_coordinator and student.assigned_career_coordinator_2 %}bg-success{% elif student.assigned_career_coordinator or student.assigned_career_coordinator_2 %}bg-info text-dark{% else %}bg-warning text-dark{% endif %} px-3 py-1 mt-1 mt-md-0">
+                                    {% if student.assigned_career_coordinator and student.assigned_career_coordinator_2 %}
+                                    ✓ Both Coordinators Matched
+                                    {% elif student.assigned_career_coordinator or student.assigned_career_coordinator_2 %}
+                                    1 Coordinator Matched
+                                    {% else %}
+                                    Select Front-Runners Above to Match
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <div class="row g-3 mt-1">
+                                <!-- Coordinator 1 Card -->
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded border h-100">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge bg-primary text-white">Choice 1 Coordinator</span>
+                                            {% if student.assigned_career_coordinator %}
+                                            <span class="badge bg-success">✓ Auto-Matched</span>
+                                            {% else %}
+                                            <span class="badge bg-warning text-dark">Pending Selection</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="mb-1 small">
+                                            <span class="text-muted text-uppercase font-weight-bold d-block" style="font-size: 0.72rem;">Target Goal</span>
+                                            <span class="font-weight-bold text-dark">{{ student.narrow_goal_1 or (career_choices[0].career_pathway if career_choices else 'Choice 1') }}</span>
+                                        </p>
+                                        <div class="p-2 bg-white rounded border small mt-2">
+                                            <span class="text-muted d-block font-weight-bold" style="font-size: 0.72rem;">ASSIGNED MENTOR</span>
+                                            <p class="mb-0 font-weight-bold text-dark" style="font-size: 0.95rem;">
+                                                {{ student.assigned_career_coordinator or "System will match upon selecting Goal 1" }}
+                                            </p>
+                                            {% if student.chosen_career_domain %}
+                                            <small class="text-muted">Domain: <b>{{ student.chosen_career_domain }}</b></small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coordinator 2 Card -->
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded border h-100">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge bg-secondary text-white">Choice 2 Coordinator (Optional)</span>
+                                            {% if student.assigned_career_coordinator_2 %}
+                                            <span class="badge bg-success">✓ Auto-Matched</span>
+                                            {% else %}
+                                            <span class="badge bg-light text-muted border">Optional</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="mb-1 small">
+                                            <span class="text-muted text-uppercase font-weight-bold d-block" style="font-size: 0.72rem;">Alternative Goal</span>
+                                            <span class="font-weight-bold text-dark">{{ student.narrow_goal_2 or 'None chosen (Optional second choice)' }}</span>
+                                        </p>
+                                        <div class="p-2 bg-white rounded border small mt-2">
+                                            <span class="text-muted d-block font-weight-bold" style="font-size: 0.72rem;">ASSIGNED MENTOR</span>
+                                            <p class="mb-0 font-weight-bold text-dark" style="font-size: 0.95rem;">
+                                                {{ student.assigned_career_coordinator_2 or (student.narrow_goal_2 and "System will match upon selecting Goal 2" or "No second choice selected") }}
+                                            </p>
+                                            {% if student.chosen_career_domain_2 %}
+                                            <small class="text-muted">Domain: <b>{{ student.chosen_career_domain_2 }}</b></small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TILE 2: Peer Forums & Circles -->
+                    <div class="tab-pane fade" id="subtab-forums" role="tabpanel" aria-labelledby="subtab-forums-btn">
+                        <div class="p-3 bg-white border rounded shadow-sm" style="border-left: 4px solid #6f42c1;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+                                <div>
+                                    <h6 class="font-weight-bold text-dark mb-0">🤝 Peer Forums for Your Shortlisted Pathways</h6>
+                                    <small class="text-muted">Domain circles matched with your shortlisted goals &bull; Supported by Student DB Ambassadors</small>
+                                </div>
+                                {% if other_peer_forums %}
+                                <button class="btn btn-outline-primary btn-sm font-weight-bold mt-1 mt-md-0" type="button" data-toggle="collapse" data-target="#collapseOtherForums" data-bs-toggle="collapse" data-bs-target="#collapseOtherForums" aria-expanded="false" aria-controls="collapseOtherForums" style="border-radius: 6px;">
+                                    👁️ Explore Other Domain Groups ({{ other_peer_forums | length }})
+                                </button>
+                                {% endif %}
+                            </div>
+                            <p class="text-muted small mb-3">
+                                Connect with fellow aspirants across institutions in your specific target domains for syllabus tracking, daily editorial analysis, and peer study accountability.
+                            </p>
+
+                            <!-- Relevant Peer Forums Grid -->
+                            <div class="row g-3">
+                                {% for pf in relevant_peer_forums %}
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded border h-100 shadow-sm d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="badge {% if 'Telegram' in pf.platform %}bg-info text-dark{% else %}bg-success{% endif %}">
+                                                    {{ pf.platform }}
+                                                </span>
+                                                <span class="badge bg-primary text-white">Recommended</span>
+                                            </div>
+                                            <h6 class="font-weight-bold text-dark mb-1">{{ pf.forum_name }}</h6>
+                                            <small class="text-muted font-weight-bold d-block mb-1">🎯 Domain: {{ pf.career_domain }}</small>
+                                            <p class="text-muted small mb-2">{{ pf.forum_description }}</p>
+                                            {% if pf.student_ambassador %}
+                                            <div class="small text-muted mb-2">
+                                                👤 <b>Ambassador:</b> {{ pf.student_ambassador }}
+                                                {% if pf.ambassador_contact %}&bull; 📱 {{ pf.ambassador_contact }}{% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mt-2 pt-2 border-top">
+                                            <a href="{{ pf.invite_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm {% if 'Telegram' in pf.platform %}btn-outline-info text-dark{% else %}btn-outline-success{% endif %} w-100 font-weight-bold">
+                                                💬 Join {{ pf.platform }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Collapsible Section for Other Domain Groups -->
+                            {% if other_peer_forums %}
+                            <div class="collapse mt-3 pt-3 border-top" id="collapseOtherForums">
+                                <h6 class="font-weight-bold text-muted small text-uppercase mb-2">Other Broad Career Groups & Circles:</h6>
+                                <div class="row g-3">
+                                    {% for pf in other_peer_forums %}
+                                    <div class="col-md-6">
+                                        <div class="p-3 bg-light rounded border h-100 shadow-sm d-flex flex-column justify-content-between">
+                                            <div>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="badge {% if 'Telegram' in pf.platform %}bg-info text-dark{% else %}bg-success{% endif %}">
+                                                        {{ pf.platform }}
+                                                    </span>
+                                                    <small class="text-muted font-weight-bold">{{ pf.career_domain }}</small>
+                                                </div>
+                                                <h6 class="font-weight-bold text-dark mb-1">{{ pf.forum_name }}</h6>
+                                                <p class="text-muted small mb-2">{{ pf.forum_description }}</p>
+                                                {% if pf.student_ambassador %}
+                                                <div class="small text-muted mb-2">
+                                                    👤 <b>Ambassador:</b> {{ pf.student_ambassador }}
+                                                    {% if pf.ambassador_contact %}&bull; 📱 {{ pf.ambassador_contact }}{% endif %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="mt-2 pt-2 border-top">
+                                                <a href="{{ pf.invite_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm {% if 'Telegram' in pf.platform %}btn-outline-info text-dark{% else %}btn-outline-success{% endif %} w-100 font-weight-bold">
+                                                    💬 Join {{ pf.platform }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- TILE 3: Online APSWB Sessions -->
+                    <div class="tab-pane fade" id="subtab-sessions" role="tabpanel" aria-labelledby="subtab-sessions-btn">
+                        <div class="p-3 bg-white border rounded shadow-sm" style="border-left: 4px solid #0dcaf0;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+                                <div class="d-flex align-items-center">
+                                    <span style="font-size: 1.5rem;" class="me-2">📡</span>
+                                    <div>
+                                        <h6 class="font-weight-bold text-dark mb-0">Upcoming APSWB & Dream Big Online Interactive Sessions</h6>
+                                        <small class="text-muted">Alternate Sundays (11:00 AM – 1:00 PM IST) with accomplished star mentors.</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-info text-dark px-3 py-1 mt-2 mt-md-0">{{ online_sessions | length }} Sessions Scheduled</span>
+                            </div>
+
+                            <div id="session-reg-alert" class="alert d-none my-2 py-2 small text-center" role="alert"></div>
+
+                            <div class="mt-3">
+                                {% for s in online_sessions %}
+                                <div class="p-3 bg-light rounded border mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div style="max-width: 650px;">
+                                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                            <span class="badge {% if s.organizer == 'APSWB' %}bg-primary{% else %}bg-secondary{% endif %}">{{ s.organizer }}</span>
+                                            <span class="badge bg-dark">{{ s.career_domain }}</span>
+                                            <small class="text-muted font-weight-bold">📅 {{ s.session_datetime }} &bull; {{ s.meeting_platform }}</small>
+                                        </div>
+                                        <h6 class="font-weight-bold text-dark mb-1">{{ s.session_title }}</h6>
+                                        {% if s.speakers_summary %}
+                                        <p class="mb-0 text-muted small">🎙️ <b>Speakers:</b> {{ s.speakers_summary }}</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="text-end">
+                                        {% if s.is_registered %}
+                                            <span class="badge bg-success px-3 py-2 d-block mb-1">✓ Registered</span>
+                                            {% if s.meeting_link %}
+                                            <a href="{{ s.meeting_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary font-weight-bold px-3 py-1 shadow-sm">
+                                                🔗 Join Live ({{ s.meeting_platform }})
+                                            </a>
+                                            {% else %}
+                                            <small class="text-muted d-block">Join link broadcasted prior to session</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <button type="button" class="btn btn-sm btn-outline-info text-dark font-weight-bold px-3 py-2 btn-reg-session" data-session-id="{{ s.name }}">
+                                                📝 Register for Session
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- TAB 3: DECIDE (Commit to a Career Goal: A Promise to Self) -->
+        <div class="tab-pane fade {% if active_stage == 'DECIDE' %}show active{% endif %}" id="tab-decide" role="tabpanel" aria-labelledby="pills-decide-tab">
+            <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 12px;">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3 flex-wrap gap-2">
+                    <div>
+                        <h5 class="font-weight-bold text-dark mb-0">Stage 3: DECIDE — Commit to a Career Goal: A Promise to Self</h5>
+                        <small class="text-muted">End of Year 1 / 1st Week of Year 2 (2-day flagship event)</small>
+                    </div>
+                    <div>
+                        {% if current_stage_num > 3 %}
+                        <span class="badge bg-secondary text-white px-3 py-2" style="font-size: 0.85rem;">🔒 Stage 3 Complete (Active in DEVELOP)</span>
+                        {% elif student.final_chosen_career_goal or (career_goal and career_goal.current_5ds_stage == 'DECIDE') %}
+                        <span class="badge bg-success px-3 py-2" style="font-size: 0.85rem;">✓ Stage Committed</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 0.85rem;">Pending Commitment</span>
+                        {% endif %}
+                    </div>
                 </div>
 
                 {% if current_stage_num >= 3 %}
                 <div id="decide-alert" class="alert d-none mb-3 py-2 text-center" role="alert"></div>
 
-                {% if student.final_chosen_career_goal or (career_goal and career_goal.current_5ds_stage == 'DECIDE') %}
-                <div class="p-3 rounded mb-3" style="background-color: #f8fafc; border-left: 4px solid #10b981;">
-                    <p class="mb-2">
-                        <span class="text-muted small text-uppercase font-weight-bold d-block">Finalized Career Pathway</span>
-                        <span class="text-success font-weight-bold" style="font-size: 1.15rem;">
-                            {{ student.final_chosen_career_goal or (career_goal and career_goal.finalized_career_goal) }}
-                        </span>
-                    </p>
-                    {% if (career_goal and career_goal.personal_vision_statement) or student.personal_vision_statement %}
-                    <p class="mb-2">
-                        <span class="text-muted small text-uppercase font-weight-bold d-block">Personal Vision Statement</span>
-                        <span class="text-dark fst-italic">"{{ (career_goal and career_goal.personal_vision_statement) or student.personal_vision_statement }}"</span>
-                    </p>
+                <!-- Stage 3 Sub-Navigation Tabs (Single Row Auto-Adjusting) -->
+                <ul class="nav nav-pills d-flex flex-row flex-nowrap w-100 mb-3 p-1 bg-light rounded" id="decideSubTabs" role="tablist" style="overflow-x: auto; gap: 4px;">
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link active py-2 px-2 w-100 font-weight-bold text-dark text-truncate" id="decide-tab-overview" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#decide-pane-overview" data-target="#decide-pane-overview" type="button" role="tab" style="font-size: 0.85rem; border-radius: 8px;">
+                            🏛️ Flagship Event & Overview
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link py-2 px-2 w-100 font-weight-bold text-dark text-truncate" id="decide-tab-vision" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#decide-pane-vision" data-target="#decide-pane-vision" type="button" role="tab" style="font-size: 0.85rem; border-radius: 8px;">
+                            🌟 My Vision & Promise to Self
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link py-2 px-2 w-100 font-weight-bold text-dark text-truncate" id="decide-tab-forum" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#decide-pane-forum" data-target="#decide-pane-forum" type="button" role="tab" style="font-size: 0.85rem; border-radius: 8px;">
+                            🤝 Career Peer Forum & Ambassador
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Stage 3 Sub-Tab Panes -->
+                <div class="tab-content" id="decideSubTabContent">
+                    <!-- Pane 1: Flagship Event & Overview -->
+                    <div class="tab-pane fade show active" id="decide-pane-overview" role="tabpanel">
+                        <!-- Flagship 2-Day Event Schedule Box -->
+                        <div class="card border-0 shadow-sm mb-3" style="background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); border-radius: 10px;">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+                                    <span class="badge bg-primary px-2 py-1 font-weight-bold">2-Day Flagship Event Structure</span>
+                                    <span class="text-muted small"><strong>Timeline:</strong> End of Year 1 / 1st Week of Year 2</span>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <div class="bg-white p-3 rounded h-100 border">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <span class="badge bg-info text-dark me-2 px-2 py-1">Day 1</span>
+                                                <h6 class="font-weight-bold mb-0 text-dark">Recap, Presentation & Panel Q&A</h6>
+                                            </div>
+                                            <ul class="small text-muted ps-3 mb-0">
+                                                <li>EGS:DB objectives recap and reflection on 1st year exploration.</li>
+                                                <li>Presentations on top DREAM BIG career goals & emerging pathways.</li>
+                                                <li>Interactive panel Q&A session with industry leaders and mentors.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="bg-white p-3 rounded h-100 border">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <span class="badge bg-success text-white me-2 px-2 py-1">Day 2</span>
+                                                <h6 class="font-weight-bold mb-0 text-dark">Articulation & Formal Commitment</h6>
+                                            </div>
+                                            <ul class="small text-muted ps-3 mb-0">
+                                                <li>Students voluntarily articulate their chosen single career goal.</li>
+                                                <li>Expression of their <em>'why'</em>, what inspires them, and world impact.</li>
+                                                <li>Submission of <strong>Personal Vision Statement</strong> & <strong>A Promise to Self</strong>.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Objective & Single Goal Conversion Summary -->
+                        <div class="p-3 rounded mb-3" style="background-color: #f8fafc; border-left: 4px solid #10b981;">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                <div>
+                                    <span class="text-muted small text-uppercase font-weight-bold d-block">Objective & Output</span>
+                                    <span class="text-dark font-weight-bold">Convert exploration into a single goal; declare commitment in a flagship event — A Promise to Self.</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-light text-dark border px-2 py-1">Cohort Year: {{ student.cohort_year or 'Current' }}</span>
+                                </div>
+                            </div>
+                            {% if student.final_chosen_career_goal or (career_goal and career_goal.current_5ds_stage == 'DECIDE') %}
+                            <hr class="my-2">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <small class="text-muted text-uppercase font-weight-bold d-block">Finalized Single Career Goal:</small>
+                                    <span class="text-success font-weight-bold" style="font-size: 1.15rem;">
+                                        🎯 {{ student.final_chosen_career_goal or (career_goal and career_goal.finalized_career_goal) }}
+                                    </span>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                                    {% if (career_goal and career_goal.deadline) or student.date_of_decision %}
+                                    <small class="text-muted d-block">📅 Decision Date: <b>{{ (career_goal and career_goal.deadline) or student.date_of_decision }}</b></small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if student.reason_for_goal_change %}
+                        <!-- History of Previous Re-evaluations -->
+                        <div class="alert alert-info py-2 px-3 mb-3" style="border-radius: 8px;">
+                            <small class="font-weight-bold d-block mb-1">📜 Extended Discovery History (Reason for Previous Changes):</small>
+                            <pre class="mb-0 text-dark small" style="white-space: pre-wrap; font-family: inherit;">{{ student.reason_for_goal_change }}</pre>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Pane 2: Vision & Promise to Self -->
+                    <div class="tab-pane fade" id="decide-pane-vision" role="tabpanel">
+                        {% if student.final_chosen_career_goal or (career_goal and career_goal.current_5ds_stage == 'DECIDE') %}
+                        <div class="row g-3 mb-3">
+                            <!-- Chosen Career Goal Card -->
+                            <div class="col-12">
+                                <div class="p-3 rounded bg-white border border-success shadow-sm">
+                                    <span class="badge bg-success mb-2">Committed Single Career Goal</span>
+                                    <h5 class="text-dark font-weight-bold mb-1">
+                                        {{ student.final_chosen_career_goal or (career_goal and career_goal.finalized_career_goal) }}
+                                    </h5>
+                                    {% if final_goal_doc %}
+                                    <div class="small text-muted mt-1">
+                                        <span class="badge bg-light text-dark border me-1">{{ final_goal_doc.career_category }}</span>
+                                        <span class="badge bg-light text-muted border">{{ final_goal_doc.career_group }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Personal Vision Statement (The 'Why', Inspiration, World Impact) -->
+                            <div class="col-md-6">
+                                <div class="p-3 rounded bg-white border h-100 shadow-sm" style="border-top: 3px solid #3b82f6 !important;">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="font-weight-bold text-dark mb-0">🌟 Personal Vision Statement</h6>
+                                        <span class="badge bg-primary text-white" style="font-size: 0.7rem;">Day 2 Articulation</span>
+                                    </div>
+                                    <p class="text-muted small mb-2">Articulating the chosen goal, the core 'why', inspiration, and the impact to make to the world:</p>
+                                    <div class="p-2 bg-light rounded border fst-italic text-dark" style="min-height: 80px;">
+                                        "{{ (career_goal and career_goal.personal_vision_statement) or student.personal_vision_statement or 'No vision statement recorded yet.' }}"
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- A Promise to Self -->
+                            <div class="col-md-6">
+                                <div class="p-3 rounded bg-white border h-100 shadow-sm" style="border-top: 3px solid #10b981 !important;">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="font-weight-bold text-dark mb-0">🤝 A Promise to Self</h6>
+                                        <span class="badge bg-success text-white" style="font-size: 0.7rem;">Pledge of Accountability</span>
+                                    </div>
+                                    <p class="text-muted small mb-2">Formal commitment declared during the flagship DECIDE event:</p>
+                                    <div class="p-2 bg-light rounded border fst-italic text-dark" style="min-height: 80px;">
+                                        "{{ (career_goal and career_goal.a_promise_to_self) or student.a_promise_to_self or 'I promise to myself to stay dedicated and pursue this career goal with utmost sincerity.' }}"
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-light border p-4 text-center my-3">
+                            <span style="font-size: 2rem;">✍️</span>
+                            <h6 class="font-weight-bold text-dark mt-2 mb-1">Declare Your Vision & Promise to Self</h6>
+                            <p class="text-muted small mb-3">Convert your exploration into a single chosen goal and voluntarily articulate your vision statement to complete Stage 3: DECIDE.</p>
+                            <button type="button" class="btn btn-primary px-4 py-2 font-weight-bold" data-toggle="modal" data-target="#decideModal" data-bs-toggle="modal" data-bs-target="#decideModal" id="btn-open-decide-modal-stage3" style="border-radius: 8px;">
+                                ✍️ Make A Promise to Self
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Pane 3: Career Peer Forum & Ambassador -->
+                    <div class="tab-pane fade" id="decide-pane-forum" role="tabpanel">
+                        <div class="alert alert-light border p-3 mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-success text-white me-2">Core Activity c</span>
+                                <h6 class="font-weight-bold mb-0 text-dark">Formation of Career-Specific Peer-Learning Forums with DB Ambassador</h6>
+                            </div>
+                            <p class="small text-muted mb-0">
+                                In Stage 3 DECIDE, career-specific peer-learning forums are formally constituted with a dedicated <strong>DREAM BIG (DB) Ambassador</strong> assigned to guide and lead each forum.
+                            </p>
+                        </div>
+
+                        {% if final_goal_forum %}
+                        <!-- Dedicated Ambassador & Forum Card for Committed Goal -->
+                        <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                    <div>
+                                        <span class="badge bg-primary px-2 py-1 mb-1">Your Career-Specific Peer Forum</span>
+                                        <h5 class="font-weight-bold text-dark mb-1">{{ final_goal_forum.forum_name }}</h5>
+                                        <small class="text-muted d-block"><b>Domain:</b> {{ final_goal_forum.career_domain }}</small>
+                                    </div>
+                                    <div>
+                                        {% if final_goal_forum.invite_link %}
+                                        <a href="{{ final_goal_forum.invite_link }}" target="_blank" class="btn btn-sm btn-success font-weight-bold px-3 py-2">
+                                            💬 Join Official Group
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <hr class="my-2">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-7">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 44px; height: 44px; font-size: 1.2rem;">
+                                                🎓
+                                            </div>
+                                            <div>
+                                                <small class="text-muted text-uppercase font-weight-bold d-block">Assigned DB Ambassador:</small>
+                                                <strong class="text-dark">{{ final_goal_forum.student_ambassador or 'Assigned DB Ambassador' }}</strong>
+                                                {% if final_goal_forum.ambassador_contact %}
+                                                <span class="text-muted small d-block">📞 {{ final_goal_forum.ambassador_contact }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5 text-md-end">
+                                        <span class="badge bg-light text-dark border px-2 py-1">Platform: {{ final_goal_forum.platform or 'WhatsApp / Telegram' }}</span>
+                                        <span class="badge bg-success text-white px-2 py-1 ms-1">Active Forum</span>
+                                    </div>
+                                </div>
+                                {% if final_goal_forum.forum_description %}
+                                <div class="mt-2 pt-2 border-top">
+                                    <small class="text-muted">{{ final_goal_forum.forum_description }}</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- Relevant Forums matching shortlisted or all domains -->
+                        <div class="row g-3">
+                            {% for pf in relevant_peer_forums[:2] %}
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm" style="border-radius: 10px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                                    <div class="card-body p-3">
+                                        <span class="badge bg-info text-dark mb-1">{{ pf.career_domain }}</span>
+                                        <h6 class="font-weight-bold text-dark mb-1">{{ pf.forum_name }}</h6>
+                                        <small class="text-muted d-block mb-2"><b>DB Ambassador:</b> {{ pf.student_ambassador or 'Assigned Ambassador' }}</small>
+                                        {% if pf.invite_link %}
+                                        <a href="{{ pf.invite_link }}" target="_blank" class="btn btn-sm btn-outline-primary font-weight-bold w-100">
+                                            💬 Connect with Peer Forum
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Action Toolbar: Locked when advanced past Stage 3 -->
+                <div class="border-top pt-3 mt-3">
+                    {% if current_stage_num > 3 %}
+                    <!-- Stage 3 is Completed & Locked -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-secondary text-white px-3 py-2 me-2 font-weight-bold" style="font-size: 0.9rem;">
+                                🔒 Stage 3 Complete (Active in DEVELOP)
+                            </span>
+                            <small class="text-muted">Single career goal locked. All preparation milestones are tracked in Stage 4: DEVELOP.</small>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-warning text-dark font-weight-bold px-3 py-2" data-toggle="modal" data-target="#reevaluateModal" data-bs-toggle="modal" data-bs-target="#reevaluateModal" id="btn-open-reevaluate-modal-locked" style="border-radius: 8px;">
+                                🔄 Re-evaluate Goal (Return to DISCOVER)
+                            </button>
+                        </div>
+                    </div>
+                    {% elif active_stage == 'DECIDE' %}
+                    <!-- Stage 3 is Currently Active -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <button type="button" class="btn btn-outline-warning text-dark font-weight-bold px-3 py-2" data-toggle="modal" data-target="#reevaluateModal" data-bs-toggle="modal" data-bs-target="#reevaluateModal" id="btn-open-reevaluate-modal" style="border-radius: 8px;">
+                                🔄 Re-evaluate Goal (Return to DISCOVER)
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary px-4 py-2 font-weight-bold" data-toggle="modal" data-target="#decideModal" data-bs-toggle="modal" data-bs-target="#decideModal" id="btn-update-decide-modal" style="border-radius: 8px;">
+                                ✍️ Update Vision & Promise
+                            </button>
+
+                            <button type="button" class="btn btn-success font-weight-bold px-4 py-2" id="btn-advance-develop" style="border-radius: 8px;">
+                                🚀 Proceed to Stage 4: DEVELOP
+                            </button>
+                        </div>
+                    </div>
                     {% endif %}
-                    {% if (career_goal and career_goal.a_promise_to_self) or student.a_promise_to_self %}
-                    <p class="mb-2">
-                        <span class="text-muted small text-uppercase font-weight-bold d-block">Promise to Self</span>
-                        <span class="text-dark fst-italic">"{{ (career_goal and career_goal.a_promise_to_self) or student.a_promise_to_self }}"</span>
-                    </p>
-                    {% endif %}
-                    {% if (career_goal and career_goal.deadline) or student.date_of_decision %}
-                    <small class="text-muted d-block">
-                        📅 Date of Commitment: <b>{{ (career_goal and career_goal.deadline) or student.date_of_decision }}</b>
-                    </small>
-                    {% endif %}
                 </div>
-                {% else %}
-                <div class="alert alert-light border p-3 mb-3 text-muted">
-                    <p class="mb-1 font-weight-bold text-dark">Ready to take the next step in your DREAM BIG journey?</p>
-                    <p class="mb-0 small">Finalize ONE chosen career pathway from your top 5 choices, state your personal vision, and make a formal promise to yourself to advance to the DECIDE stage.</p>
-                </div>
-                {% endif %}
-
-                {% if student.reason_for_goal_change %}
-                <!-- History of Previous Re-evaluations -->
-                <div class="alert alert-info py-2 px-3 mb-3" style="border-radius: 8px;">
-                    <small class="font-weight-bold d-block mb-1">📜 Extended Discovery History (Reason for Previous Changes):</small>
-                    <pre class="mb-0 text-dark small" style="white-space: pre-wrap; font-family: inherit;">{{ student.reason_for_goal_change }}</pre>
-                </div>
-                {% endif %}
-
-                {% if active_stage == 'DECIDE' %}
-                <div class="text-center pt-2 d-flex justify-content-center flex-wrap gap-2">
-                    <button type="button" class="btn btn-primary px-4 py-2 font-weight-bold" data-toggle="modal" data-target="#decideModal" data-bs-toggle="modal" data-bs-target="#decideModal" id="btn-update-decide-modal" style="border-radius: 8px;">
-                        ✍️ Update Promise to Self
-                    </button>
-
-                    <button type="button" class="btn btn-outline-warning text-dark font-weight-bold px-3 py-2 ms-2" data-toggle="modal" data-target="#reevaluateModal" data-bs-toggle="modal" data-bs-target="#reevaluateModal" id="btn-open-reevaluate-modal" style="border-radius: 8px;">
-                        🔄 Re-evaluate Goal (Return to DISCOVER)
-                    </button>
-
-                    <button type="button" class="btn btn-success font-weight-bold px-4 py-2 ms-2" id="btn-advance-develop" style="border-radius: 8px;">
-                        🚀 Proceed to Stage 4: DEVELOP
-                    </button>
-                </div>
-                {% endif %}
                 {% else %}
                 <div class="alert alert-light border text-center p-4 my-2" style="border-radius: 10px;">
                     <span style="font-size: 2rem;">🔒</span>
@@ -386,133 +1042,700 @@
             </div>
         </div>
 
-        <!-- TAB 4: DEVELOP -->
+        <!-- TAB 4: DEVELOP/PREPARE (Mentoring and Preparation, Alongside Academics) -->
         <div class="tab-pane fade {% if active_stage in ['DEVELOP', 'DEVELOP/PREPARE'] %}show active{% endif %}" id="tab-develop" role="tabpanel" aria-labelledby="pills-develop-tab">
             <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 12px;">
-                {% if current_stage_num >= 4 %}
                 <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3 flex-wrap gap-2">
                     <div>
-                        <h5 class="font-weight-bold text-dark mb-1">Stage 4: DEVELOP — Action Plan & Commitments</h5>
-                        <small class="text-muted">Targeted skill-building, preparation milestones, and mentorship commitments.</small>
+                        <h5 class="font-weight-bold text-dark mb-0">Stage 4: DEVELOP/Prepare — Mentoring & Preparation, Alongside Academics</h5>
+                        <small class="text-muted">Begins once a career goal is finalised (From Year 1 / start of Year 2 onwards)</small>
                     </div>
                     <div>
-                        <button type="button" class="btn btn-primary font-weight-bold px-3 py-2" data-toggle="modal" data-target="#addCommitmentModal" data-bs-toggle="modal" data-bs-target="#addCommitmentModal" id="btn-open-commitment-modal" style="border-radius: 8px;">
-                            ➕ Add New Commitment
-                        </button>
+                        {% if current_stage_num > 4 %}
+                        <span class="badge bg-secondary text-white px-3 py-2" style="font-size: 0.85rem;">🔒 Stage 4 Complete (Active in DELIVER)</span>
+                        {% elif active_stage in ['DEVELOP', 'DEVELOP/PREPARE'] %}
+                        <span class="badge bg-primary text-white px-3 py-2" style="font-size: 0.85rem;">● Active Preparation Stage</span>
+                        {% else %}
+                        <span class="badge bg-secondary text-white px-3 py-2" style="font-size: 0.85rem;">Upcoming Stage</span>
+                        {% endif %}
                     </div>
                 </div>
 
-                {% if student.final_chosen_career_goal or (career_goal and career_goal.finalized_career_goal) %}
-                <div class="p-3 rounded mb-3" style="background-color: #f8fafc; border-left: 4px solid #3b82f6;">
-                    <span class="text-muted small text-uppercase font-weight-bold d-block">Finalized Career Goal</span>
-                    <span class="text-primary font-weight-bold" style="font-size: 1.1rem;">
-                        {{ student.final_chosen_career_goal or (career_goal and career_goal.finalized_career_goal) }}
-                    </span>
-                    {% if (career_goal and career_goal.personal_vision_statement) or student.personal_vision_statement %}
-                    <p class="mb-0 mt-1 small text-dark fst-italic">
-                        "{{ (career_goal and career_goal.personal_vision_statement) or student.personal_vision_statement }}"
-                    </p>
+                {% if current_stage_num >= 4 %}
+                <!-- Stage 4 Sub-Navigation Tabs (Single Row Auto-Adjusting) -->
+                <ul class="nav nav-pills d-flex flex-row flex-nowrap w-100 mb-3 p-1 bg-light rounded" id="developSubTabs" role="tablist" style="overflow-x: auto; gap: 4px;">
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link active py-2 px-2 w-100 font-weight-bold text-dark text-truncate" id="develop-tab-actionplan" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#develop-pane-actionplan" data-target="#develop-pane-actionplan" type="button" role="tab" style="font-size: 0.85rem; border-radius: 8px;">
+                            📋 Joint Action Plan & Milestones
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link py-2 px-2 w-100 font-weight-bold text-dark text-truncate" id="develop-tab-mentoring" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#develop-pane-mentoring" data-target="#develop-pane-mentoring" type="button" role="tab" style="font-size: 0.85rem; border-radius: 8px;">
+                            🧭 Structured Mentoring & Academies
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link py-2 px-2 w-100 font-weight-bold text-dark text-truncate" id="develop-tab-skills" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#develop-pane-skills" data-target="#develop-pane-skills" type="button" role="tab" style="font-size: 0.85rem; border-radius: 8px;">
+                            💼 Internships & Skills (5 Factors 3,4,5)
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Stage 4 Sub-Tab Panes -->
+                <div class="tab-content" id="developSubTabContent">
+                    <!-- Pane 1: Joint Action Plan & Milestones -->
+                    <div class="tab-pane fade show active" id="develop-pane-actionplan" role="tabpanel">
+                        <!-- Objective / Outputs Callout -->
+                        <div class="p-3 rounded mb-3" style="background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border-left: 4px solid #3b82f6;">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                <div>
+                                    <span class="badge bg-primary px-2 py-1 font-weight-bold">Objective / Outputs</span>
+                                    <span class="text-dark font-weight-bold ms-2">Structured self and collaborative preparation with action plan and daily fixed routine.</span>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-primary font-weight-bold px-3 py-1" data-toggle="modal" data-target="#addCommitmentModal" data-bs-toggle="modal" data-bs-target="#addCommitmentModal" id="btn-open-commitment-modal" style="border-radius: 6px;">
+                                        ➕ Add Milestone
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row g-2 align-items-center pt-1 border-top">
+                                <div class="col-md-7">
+                                    <span class="text-muted small text-uppercase font-weight-bold d-block">Finalized Single Career Goal:</span>
+                                    <span class="text-primary font-weight-bold" style="font-size: 1.05rem;">
+                                        🎯 {{ student.final_chosen_career_goal or (career_goal and career_goal.finalized_career_goal) }}
+                                    </span>
+                                </div>
+                                <div class="col-md-5 text-md-end">
+                                    <span class="badge bg-white text-dark border px-2 py-1">Core Activity a: Regular Studies + Exam Prep</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fixed Daily Routine Check Card -->
+                        <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; background-color: #ffffff; border: 1px solid #e2e8f0;">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                            ⏰
+                                        </div>
+                                        <div>
+                                            <h6 class="font-weight-bold text-dark mb-0">Daily Fixed Routine: Knowledge, Skills & Strategy</h6>
+                                            <small class="text-muted">Balancing regular college degree studies alongside competitive examination preparation.</small>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {% if student.sf_routine_discipline and student.sf_routine_discipline >= 2 %}
+                                        <span class="badge bg-success px-3 py-2">✓ Disciplined Routine ({{ student.sf_routine_discipline }}/3)</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark px-3 py-2">⚠️ Routine Needs Attention</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Commitments Table / List -->
+                        <div class="card border-0 shadow-sm" style="border-radius: 10px; border: 1px solid #e2e8f0;">
+                            <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+                                <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">Milestone Action Items ({{ commitments | length if commitments else 0 }})</span>
+                                <small class="text-muted">Targeted preparation tasks and progress tracking</small>
+                            </div>
+                            {% if commitments and commitments | length > 0 %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 35%;">Action Required</th>
+                                            <th style="width: 20%;">Due Date</th>
+                                            <th style="width: 15%;">Status</th>
+                                            <th style="width: 30%;">Reported Barrier</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for c in commitments %}
+                                        <tr>
+                                            <td>
+                                                <span class="font-weight-bold text-dark">{{ c.action_required }}</span>
+                                            </td>
+                                            <td>
+                                                📅 {{ c.due_date }}
+                                            </td>
+                                            <td>
+                                                {% if c.progress_status == 'Completed' %}
+                                                <span class="badge bg-success">✓ Completed</span>
+                                                {% elif c.progress_status in ['In Progress', 'Progress Made'] %}
+                                                <span class="badge bg-primary">⏳ In Progress</span>
+                                                {% elif c.progress_status == 'Stalled' %}
+                                                <span class="badge bg-danger">⚠️ Stalled</span>
+                                                {% else %}
+                                                <span class="badge bg-warning text-dark">🕒 Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if c.reported_barrier %}
+                                                <span class="text-muted small">{{ c.reported_barrier }}</span>
+                                                {% else %}
+                                                <span class="text-muted small fst-italic">None reported</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="p-4 text-center">
+                                <div class="text-muted mb-2" style="font-size: 1.8rem;">📋</div>
+                                <p class="text-muted mb-2 font-weight-bold">No commitments added yet.</p>
+                                <p class="text-muted small mb-3">Work with your career coordinator to define your first joint action plan milestone.</p>
+                                <button type="button" class="btn btn-sm btn-outline-primary font-weight-bold px-3 py-2" data-toggle="modal" data-target="#addCommitmentModal" data-bs-toggle="modal" data-bs-target="#addCommitmentModal">
+                                    ➕ Add Your First Milestone
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Pane 2: Structured Mentoring & Academies -->
+                    <div class="tab-pane fade" id="develop-pane-mentoring" role="tabpanel">
+                        <!-- Core Activity b Banner -->
+                        <div class="alert alert-light border p-3 mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-primary text-white me-2">Core Activity b</span>
+                                <h6 class="font-weight-bold mb-0 text-dark">Structured Online / Physical Mentoring with Equity Safeguards</h6>
+                            </div>
+                            <p class="small text-muted mb-0">
+                                Continuous mentoring from career-specific DB Coordinators in collaboration with the DREAM BIG Team, Alumni, and peer forums. Includes networking with leading Coaching Academies based on need with inclusive equity safeguards.
+                            </p>
+                        </div>
+
+                        <!-- Assigned DB Career Coordinator Card -->
+                        <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                    <div>
+                                        <span class="badge bg-success px-2 py-1 mb-1">Career Specific DB Coordinator</span>
+                                        <h5 class="font-weight-bold text-dark mb-0">
+                                            {{ (final_goal_coordinator and final_goal_coordinator.coordinator_name) or student.assigned_career_coordinator or 'Career Coordinator Auto-Matched' }}
+                                        </h5>
+                                        <small class="text-muted">{{ (final_goal_coordinator and final_goal_coordinator.institution) or 'EGS DREAM BIG Panel' }}</small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-info text-dark px-3 py-2">Online & Physical Mentoring</span>
+                                    </div>
+                                </div>
+                                <hr class="my-2">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-7">
+                                        <div class="small text-muted">
+                                            <span class="d-block"><b>Designation:</b> {{ (final_goal_coordinator and final_goal_coordinator.designation) or 'Senior Mentor' }}</span>
+                                            <span class="d-block"><b>Role:</b> {{ (final_goal_coordinator and final_goal_coordinator.role) or 'Strategic Preparation Guide' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5 text-md-end">
+                                        {% if final_goal_coordinator and final_goal_coordinator.contact_number %}
+                                        <span class="badge bg-light text-dark border px-2 py-1">📞 {{ final_goal_coordinator.contact_number }}</span>
+                                        {% endif %}
+                                        <span class="badge bg-light text-dark border px-2 py-1 ms-1">Domain: {{ (final_goal_coordinator and final_goal_coordinator.career_domain) or student.chosen_career_domain }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coaching Academies & Alumni Collaboration Network -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm p-3 bg-white" style="border-radius: 10px; border: 1px solid #e2e8f0;">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-warning text-dark me-2">Academies Network</span>
+                                        <h6 class="font-weight-bold mb-0 text-dark">Coaching Academies Collaboration</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Need-based networking and tie-ups with reputed specialized coaching academies to ensure high-quality, inclusive preparation with equity safeguards.
+                                    </p>
+                                    <div class="p-2 bg-light rounded small text-dark border">
+                                        🤝 <b>Equity Safeguards:</b> Subsidized/scholarship seats, curated study material access, and test-series sponsorships for deserving students.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm p-3 bg-white" style="border-radius: 10px; border: 1px solid #e2e8f0;">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-info text-dark me-2">Alumni & Forums</span>
+                                        <h6 class="font-weight-bold mb-0 text-dark">Alumni & Peer Forum Synergies</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Direct interaction with successful alumni who have cleared competitive benchmarks in your chosen pathway.
+                                    </p>
+                                    {% if final_goal_forum %}
+                                    <div class="p-2 bg-light rounded small text-dark border">
+                                        👥 <b>Peer Forum:</b> {{ final_goal_forum.forum_name }}<br>
+                                        🎓 <b>Ambassador:</b> {{ final_goal_forum.student_ambassador or 'Assigned DB Ambassador' }}
+                                    </div>
+                                    {% else %}
+                                    <div class="p-2 bg-light rounded small text-muted border">
+                                        Connect with peer circles to exchange notes, solve previous year questions, and maintain study morale.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pane 3: Internships, Skills & 5 Factors (3, 4 & 5) -->
+                    <div class="tab-pane fade" id="develop-pane-skills" role="tabpanel">
+                        <!-- Core Activity c & d Callout -->
+                        <div class="alert alert-light border p-3 mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-success text-white me-2">Core Activities c & d</span>
+                                <h6 class="font-weight-bold mb-0 text-dark">Internships, Skill Building & 5 Factors Success Framework (Factors 3, 4 & 5)</h6>
+                            </div>
+                            <p class="small text-muted mb-0">
+                                Intensive focus on practical internships, industry skill building, and personality development alongside rigorous adherence to <strong>Factors 3, 4 & 5</strong> of the Student Success Framework.
+                            </p>
+                        </div>
+
+                        <!-- 5 Factors: Factors 3, 4 & 5 Tracking Cards -->
+                        <div class="row g-3 mb-3">
+                            <!-- Factor 3: Specialized Skills Learning -->
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm p-3 bg-white" style="border-radius: 10px; border-top: 3px solid #3b82f6 !important; border: 1px solid #e2e8f0;">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-primary text-white">Factor 3</span>
+                                        <small class="text-muted font-weight-bold">Skills</small>
+                                    </div>
+                                    <h6 class="font-weight-bold text-dark mb-1">Skill Building & Internships</h6>
+                                    <p class="small text-muted mb-2">Targeted technical skills, AI tools, certificates, or industry internship experience.</p>
+                                    <div class="p-2 bg-light rounded small text-dark border">
+                                        {% if student.sf_skill_learning %}
+                                        <span class="text-success font-weight-bold">✓ Active Focus:</span> {{ student.sf_skill_learning }}
+                                        {% else %}
+                                        <span class="text-muted fst-italic">No skill learning logged in self-evaluation yet.</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Factor 4: Previous Year Questions & Syllabus -->
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm p-3 bg-white" style="border-radius: 10px; border-top: 3px solid #10b981 !important; border: 1px solid #e2e8f0;">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-success text-white">Factor 4</span>
+                                        <small class="text-muted font-weight-bold">Exam Rigor</small>
+                                    </div>
+                                    <h6 class="font-weight-bold text-dark mb-1">PYQ & Syllabus Reviewed</h6>
+                                    <p class="small text-muted mb-2">Thorough analysis of competitive exam syllabus and past 5–10 years question papers.</p>
+                                    <div class="p-2 bg-light rounded small text-dark border">
+                                        {% if student.sf_pyq_syllabus_reviewed %}
+                                        <span class="text-success font-weight-bold">✓ Syllabus & PYQs Reviewed</span>
+                                        {% else %}
+                                        <span class="text-warning font-weight-bold">⚠️ Syllabus Review Pending</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Factor 5: Active Peer Forum Participation -->
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm p-3 bg-white" style="border-radius: 10px; border-top: 3px solid #8b5cf6 !important; border: 1px solid #e2e8f0;">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-purple text-white" style="background-color: #8b5cf6;">Factor 5</span>
+                                        <small class="text-muted font-weight-bold">Peer Support</small>
+                                    </div>
+                                    <h6 class="font-weight-bold text-dark mb-1">Peer Forum Engagement</h6>
+                                    <p class="small text-muted mb-2">Active participation in peer study circles, sharing mock scores and clearing doubts.</p>
+                                    <div class="p-2 bg-light rounded small text-dark border">
+                                        {% if student.sf_peer_forum_active %}
+                                        <span class="text-success font-weight-bold">✓ Actively Engaged in Forum</span>
+                                        {% else %}
+                                        <span class="text-muted fst-italic">Join peer forum discussions to complete Factor 5.</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Factor Check-in Modal Trigger -->
+                        <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <strong class="text-dark d-block">Monthly Success Framework Self-Check</strong>
+                                <small class="text-muted">Take your monthly 5-question evaluation to update your Factors 3, 4, and 5 scores.</small>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-success font-weight-bold px-3 py-2" data-toggle="modal" data-target="#successFrameworkModal" data-bs-toggle="modal" data-bs-target="#successFrameworkModal" id="btn-open-sf-modal-stage4" style="border-radius: 8px;">
+                                    📝 Update Monthly Evaluation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stage 4 Action Toolbar (with Core Activity e: Refine/Revise Career Goal) -->
+                <div class="border-top pt-3 mt-3">
+                    {% if current_stage_num > 4 %}
+                    <!-- Stage 4 is Completed & Locked -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-secondary text-white px-3 py-2 me-2 font-weight-bold" style="font-size: 0.9rem;">
+                                🔒 Stage 4 Complete (Active in DELIVER)
+                            </span>
+                            <small class="text-muted">Milestones and preparations fulfilled. Ready for final accomplishments in Stage 5: DELIVER.</small>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-warning text-dark font-weight-bold px-3 py-2" id="btn-revert-to-decide-locked" style="border-radius: 8px;">
+                                🔄 Revise / Refine Goal (Return to DECIDE)
+                            </button>
+                        </div>
+                    </div>
+                    {% elif active_stage in ['DEVELOP', 'DEVELOP/PREPARE'] %}
+                    <!-- Stage 4 is Currently Active -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <!-- Core Activity e: Freedom to Revise or Refine Career Goal -->
+                            <button type="button" class="btn btn-outline-warning text-dark font-weight-bold px-3 py-2" id="btn-revert-to-decide" style="border-radius: 8px;">
+                                🔄 Revise / Refine Career Goal (Return to DECIDE)
+                            </button>
+                            <small class="text-muted d-block mt-1" style="font-size: 0.78rem;">
+                                💡 <em>Core Activity e:</em> Students remain free to revise or refine their career goal as they learn more.
+                            </small>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-success font-weight-bold px-4 py-2" id="btn-advance-deliver" style="border-radius: 8px;">
+                                🚀 Proceed to Stage 5: DELIVER
+                            </button>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
-                {% endif %}
-
-                <!-- Commitments Table / List -->
-                {% if commitments and commitments | length > 0 %}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 35%;">Action Required</th>
-                                <th style="width: 20%;">Due Date</th>
-                                <th style="width: 15%;">Status</th>
-                                <th style="width: 30%;">Reported Barrier</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for c in commitments %}
-                            <tr>
-                                <td>
-                                    <span class="font-weight-bold text-dark">{{ c.action_required }}</span>
-                                </td>
-                                <td>
-                                    📅 {{ c.due_date }}
-                                </td>
-                                <td>
-                                    {% if c.progress_status == 'Completed' %}
-                                    <span class="badge bg-success">✓ Completed</span>
-                                    {% elif c.progress_status in ['In Progress', 'Progress Made'] %}
-                                    <span class="badge bg-primary">⏳ In Progress</span>
-                                    {% elif c.progress_status == 'Stalled' %}
-                                    <span class="badge bg-danger">⚠️ Stalled</span>
-                                    {% else %}
-                                    <span class="badge bg-warning text-dark">🕒 Pending</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if c.reported_barrier %}
-                                    <span class="text-muted small">{{ c.reported_barrier }}</span>
-                                    {% else %}
-                                    <span class="text-muted small fst-italic">None reported</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="alert alert-light border text-center p-4 my-2" style="border-radius: 10px;">
-                    <div class="text-muted mb-2" style="font-size: 1.8rem;">📋</div>
-                    <p class="text-muted mb-0 font-weight-bold">No commitments added yet. Work with your mentor to create your first action item.</p>
-                </div>
-                {% endif %}
-
-                {% if active_stage in ['DEVELOP', 'DEVELOP/PREPARE'] %}
-                <hr class="my-4">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <button type="button" class="btn btn-outline-warning font-weight-bold px-3 py-2" id="btn-revert-to-decide" style="border-radius: 8px;">
-                        🔄 Return to Stage 3: DECIDE
-                    </button>
-                    <button type="button" class="btn btn-success font-weight-bold px-4 py-2" id="btn-advance-deliver" style="border-radius: 8px;">
-                        🚀 Proceed to Stage 5: DELIVER
-                    </button>
-                </div>
-                {% endif %}
-
                 {% else %}
                 <div class="alert alert-light border text-center p-4 my-2" style="border-radius: 10px;">
                     <span style="font-size: 2rem;">🔒</span>
                     <h6 class="font-weight-bold text-dark mt-2 mb-1">Stage 4: DEVELOP is Locked</h6>
-                    <p class="text-muted small mb-0">Please finalize your pathway in <b>Stage 3: DECIDE</b> first.</p>
+                    <p class="text-muted small mb-0">Please finalize your pathway and vision statement in <b>Stage 3: DECIDE</b> first.</p>
                 </div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- TAB 5: DELIVER -->
+        <!-- TAB 5: DELIVER & GIVE BACK (Intense Preparation, Accomplishment & Leadership) -->
         <div class="tab-pane fade {% if active_stage == 'DELIVER' %}show active{% endif %}" id="tab-deliver" role="tabpanel" aria-labelledby="pills-deliver-tab">
-            <div class="card shadow-sm border-0 mb-4 p-4 text-center" style="border-radius: 12px;">
+            <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 12px;">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3 flex-wrap gap-2">
+                    <div>
+                        <h5 class="font-weight-bold text-dark mb-0">Stage 5: DELIVER & GIVE BACK — Intense Preparation, Accomplishment & Leadership</h5>
+                        <small class="text-muted">Timeline: Throughout the remaining undergraduate years and beyond</small>
+                    </div>
+                    <div>
+                        {% if current_stage_num >= 5 %}
+                        <span class="badge bg-success text-white px-3 py-2 font-weight-bold" style="font-size: 0.85rem;">🎓 Achiever & Flywheel Track</span>
+                        {% else %}
+                        <span class="badge bg-secondary text-white px-3 py-2" style="font-size: 0.85rem;">🔒 Stage 5 Locked</span>
+                        {% endif %}
+                    </div>
+                </div>
+
                 {% if current_stage_num >= 5 %}
-                <div class="my-3">
-                    <span style="font-size: 2.5rem;">🎓</span>
-                </div>
-                <h5 class="font-weight-bold text-dark mb-2">Stage 5: DELIVER</h5>
-                <p class="text-muted max-w-600 mx-auto" style="max-width: 580px;">
-                    The final stage represents achievement: qualifying for competitive examinations, admissions, entrepreneurship execution, or employment placement.
-                </p>
-                <div class="mt-2">
-                    <span class="badge bg-success px-3 py-2" style="font-size: 0.85rem;">Active Milestone</span>
+                <!-- Objective Banner -->
+                <div class="p-3 rounded mb-3" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-left: 4px solid #10b981;">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <span class="badge bg-success px-2 py-1 font-weight-bold">Objective / Outputs</span>
+                            <span class="text-dark font-weight-bold ms-2">To turn aspirants into achievers / accomplished leaders and absorb them as mentors.</span>
+                        </div>
+                        <div>
+                            <span class="badge bg-white text-dark border px-2 py-1">Undergraduate Years & Beyond</span>
+                        </div>
+                    </div>
+                    <div class="row g-2 align-items-center pt-2 mt-1 border-top border-success border-opacity-25">
+                        <div class="col-md-7">
+                            <span class="text-muted small text-uppercase font-weight-bold d-block">Career Goal Benchmark:</span>
+                            <span class="text-success font-weight-bold" style="font-size: 1.1rem;">
+                                🏆 {{ student.final_chosen_career_goal or (career_goal and career_goal.finalized_career_goal) }}
+                            </span>
+                        </div>
+                        <div class="col-md-5 text-md-end">
+                            <span class="badge bg-light text-dark border px-2 py-1">Degree: {{ student.course or 'Undergraduate Program' }} ({{ student.university_college or 'University' }})</span>
+                        </div>
+                    </div>
                 </div>
 
-                {% if active_stage == 'DELIVER' %}
-                <hr class="my-4">
-                <div class="d-flex justify-content-start align-items-center flex-wrap gap-2">
-                    <button type="button" class="btn btn-outline-warning font-weight-bold px-3 py-2" id="btn-revert-to-develop" style="border-radius: 8px;">
-                        🔄 Return to Stage 4: DEVELOP
-                    </button>
-                </div>
-                {% endif %}
+                <!-- Stage 5 Sub-Navigation Tabs (Single Row Auto-Adjusting) -->
+                <ul class="nav nav-pills d-flex flex-row flex-nowrap w-100 mb-3 p-1 bg-light rounded" id="deliverSubTabs" role="tablist" style="overflow-x: auto; gap: 4px;">
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link active py-2 px-2 w-100 font-weight-bold text-dark text-truncate" id="deliver-tab-testprep" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#deliver-pane-testprep" data-target="#deliver-pane-testprep" type="button" role="tab" style="font-size: 0.85rem; border-radius: 8px;">
+                            🎯 Test Prep & Graduation
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link py-2 px-2 w-100 font-weight-bold text-dark text-truncate" id="deliver-tab-mentoring" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#deliver-pane-mentoring" data-target="#deliver-pane-mentoring" type="button" role="tab" style="font-size: 0.85rem; border-radius: 8px;">
+                            🏛️ Post-Grad Support & Factors
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link py-2 px-2 w-100 font-weight-bold text-dark text-truncate" id="deliver-tab-flywheel" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#deliver-pane-flywheel" data-target="#deliver-pane-flywheel" type="button" role="tab" style="font-size: 0.85rem; border-radius: 8px;">
+                            🔄 Flywheel: Give Back & Mentor
+                        </button>
+                    </li>
+                </ul>
 
+                <!-- Stage 5 Sub-Tab Panes -->
+                <div class="tab-content" id="deliverSubTabContent">
+                    <!-- Pane 1: Test Prep & Academic Excellence -->
+                    <div class="tab-pane fade show active" id="deliver-pane-testprep" role="tabpanel">
+                        <div class="alert alert-light border p-3 mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-primary text-white me-2">Core Activity a</span>
+                                <h6 class="font-weight-bold mb-0 text-dark">Intense Test Preparation, Academic Excellence & Graduation</h6>
+                            </div>
+                            <p class="small text-muted mb-0">
+                                Serious focused preparation of career specific tests alongside academic excellence, ensuring successful graduation and appearing for the final career benchmark examinations.
+                            </p>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <!-- Dual Excellence Card -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm p-3 bg-white" style="border-radius: 10px; border-left: 3px solid #3b82f6 !important; border: 1px solid #e2e8f0;">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-primary text-white me-2">Dual Focus 1</span>
+                                        <h6 class="font-weight-bold mb-0 text-dark">Degree & Academic Excellence</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Maintaining top academic credentials in your degree program (<b>{{ student.course or 'Undergraduate Program' }}</b>) at <b>{{ student.university_college or 'Your College' }}</b>.
+                                    </p>
+                                    <div class="p-2 bg-light rounded small text-dark border">
+                                        🎓 High graduation scores establish foundational eligibility for civil services, defence academies, foreign universities, and corporate recruitments.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Career Specific Examination Card -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm p-3 bg-white" style="border-radius: 10px; border-left: 3px solid #10b981 !important; border: 1px solid #e2e8f0;">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-success text-white me-2">Dual Focus 2</span>
+                                        <h6 class="font-weight-bold mb-0 text-dark">Goal-Specific Competitive Test</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Intensive test series, full-length mock examinations, and past 10-year question mastery for <b>{{ student.final_chosen_career_goal or (career_goal and career_goal.finalized_career_goal) }}</b>.
+                                    </p>
+                                    <div class="p-2 bg-light rounded small text-dark border">
+                                        📝 Regularly simulate test-day conditions, analyze weak sections, and fine-tune time-management strategies with your mentors.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Milestone Action Items in DELIVER -->
+                        <div class="card border-0 shadow-sm" style="border-radius: 10px; border: 1px solid #e2e8f0;">
+                            <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+                                <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">Final Preparation Milestones ({{ commitments | length if commitments else 0 }})</span>
+                                <button type="button" class="btn btn-sm btn-outline-primary font-weight-bold px-2 py-1" data-toggle="modal" data-target="#addCommitmentModal" data-bs-toggle="modal" data-bs-target="#addCommitmentModal" style="font-size: 0.78rem;">
+                                    ➕ Add Milestone
+                                </button>
+                            </div>
+                            {% if commitments and commitments | length > 0 %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 40%;">Action Required</th>
+                                            <th style="width: 20%;">Due Date</th>
+                                            <th style="width: 15%;">Status</th>
+                                            <th style="width: 25%;">Reported Barrier</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for c in commitments %}
+                                        <tr>
+                                            <td>
+                                                <span class="font-weight-bold text-dark">{{ c.action_required }}</span>
+                                            </td>
+                                            <td>📅 {{ c.due_date }}</td>
+                                            <td>
+                                                {% if c.progress_status == 'Completed' %}
+                                                <span class="badge bg-success">✓ Completed</span>
+                                                {% elif c.progress_status in ['In Progress', 'Progress Made'] %}
+                                                <span class="badge bg-primary">⏳ In Progress</span>
+                                                {% elif c.progress_status == 'Stalled' %}
+                                                <span class="badge bg-danger">⚠️ Stalled</span>
+                                                {% else %}
+                                                <span class="badge bg-warning text-dark">🕒 Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="text-muted small">{{ c.reported_barrier or 'None reported' }}</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="p-3 text-center text-muted small">
+                                No final stage milestones added yet. Add your mock exam dates and graduation benchmarks above.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Pane 2: Post-Grad Support & 5 Factors (3, 4 & 5) -->
+                    <div class="tab-pane fade" id="deliver-pane-mentoring" role="tabpanel">
+                        <div class="alert alert-light border p-3 mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-info text-dark me-2">Core Activities b & c</span>
+                                <h6 class="font-weight-bold mb-0 text-dark">Continued Mentoring Beyond Graduation & 5 Factors Framework</h6>
+                            </div>
+                            <p class="small text-muted mb-0">
+                                Continued mentoring, periodic performance reviews, networking, and institutional support extending even beyond graduation alongside rigorous adherence to <strong>Factors 3, 4 & 5</strong>.
+                            </p>
+                        </div>
+
+                        <!-- Continued Institutional Support Card -->
+                        <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                    <div>
+                                        <span class="badge bg-primary px-2 py-1 mb-1">Ongoing Institutional Support</span>
+                                        <h5 class="font-weight-bold text-dark mb-0">EGS:DB Career Mentoring & Review Panel</h5>
+                                        <small class="text-muted">Dedicated mentor: <b>{{ (final_goal_coordinator and final_goal_coordinator.coordinator_name) or student.assigned_career_coordinator or 'DB Career Coordinator' }}</b> ({{ (final_goal_coordinator and final_goal_coordinator.institution) or 'EGS Panel' }})</small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-success text-white px-3 py-1">Active Post-Graduation Network</span>
+                                    </div>
+                                </div>
+                                <hr class="my-2">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded border small h-100">
+                                            <strong>🗓️ Periodic Reviews:</strong>
+                                            <p class="text-muted mb-0 mt-1">Quarterly evaluations on mock percentiles, interview readiness, and revision schedules.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded border small h-100">
+                                            <strong>🌐 Professional Networking:</strong>
+                                            <p class="text-muted mb-0 mt-1">Direct bridge to industry bodies, senior civil servants, armed forces officers, and researchers.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded border small h-100">
+                                            <strong>🏛️ Institutional Backing:</strong>
+                                            <p class="text-muted mb-0 mt-1">Recommendation letters, library access, and interview panel preparation support.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Success Framework Factors 3, 4 & 5 Live Status -->
+                        <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 10px; border: 1px solid #e2e8f0;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                <div>
+                                    <h6 class="font-weight-bold text-dark mb-0">Students Success Framework Adherence (Factors 3, 4 & 5)</h6>
+                                    <small class="text-muted">Maintaining highest daily discipline standards during the DELIVER phase.</small>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-outline-success font-weight-bold px-3 py-1" data-toggle="modal" data-target="#successFrameworkModal" data-bs-toggle="modal" data-bs-target="#successFrameworkModal" style="border-radius: 6px;">
+                                        📝 Check-in Score: {{ success_framework_score }}/10
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row g-2 pt-1">
+                                <div class="col-md-4">
+                                    <div class="p-2 bg-light rounded small border">
+                                        <span class="badge bg-primary mb-1">Factor 3: Skill Learning</span>
+                                        <p class="mb-0 text-dark font-weight-bold">{{ student.sf_skill_learning or 'Active Skill Learning' }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-2 bg-light rounded small border">
+                                        <span class="badge bg-success mb-1">Factor 4: PYQs & Syllabus</span>
+                                        <p class="mb-0 text-dark font-weight-bold">{% if student.sf_pyq_syllabus_reviewed %}✓ Completed Full Review{% else %}In Progress{% endif %}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-2 bg-light rounded small border">
+                                        <span class="badge bg-purple text-white mb-1" style="background-color: #8b5cf6;">Factor 5: Peer Forum</span>
+                                        <p class="mb-0 text-dark font-weight-bold">{% if student.sf_peer_forum_active %}✓ Active Contributor{% else %}Peer Engagement Ongoing{% endif %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pane 3: Flywheel & Give Back (Absorb as Mentors) -->
+                    <div class="tab-pane fade" id="deliver-pane-flywheel" role="tabpanel">
+                        <!-- Flywheel Model Banner -->
+                        <div class="card border-0 shadow-sm mb-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border-radius: 12px;">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span style="font-size: 2rem;" class="me-3">🔄</span>
+                                    <div>
+                                        <h5 class="font-weight-bold mb-0 text-white">The DREAM BIG Flywheel Effect</h5>
+                                        <small class="text-white-50">Core Activity d: Successful Candidates & Alumni Onboarded as Mentors to Junior Batches</small>
+                                    </div>
+                                </div>
+                                <p class="small text-white-50 mt-2 mb-0" style="max-width: 680px;">
+                                    The DREAM BIG ecosystem is designed as a self-sustaining virtuous cycle. As you accomplish your career aspiration, you transition from <em>aspirant</em> to <em>achiever</em>, giving back to inspire, guide, and mentor junior students entering Stages 1, 2, and 3.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Flywheel Leadership Pledge Card -->
+                        <div class="card border-0 shadow-sm p-3 bg-white mb-3" style="border-radius: 10px; border: 1px solid #e2e8f0;">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; font-size: 1.4rem;">
+                                            🤝
+                                        </div>
+                                        <div>
+                                            <h6 class="font-weight-bold text-dark mb-0">Alumni Mentorship & Leadership Roster</h6>
+                                            <small class="text-muted">Register your voluntary commitment to mentor junior aspirants from your alma mater.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                                    <span class="badge bg-success px-3 py-2 font-weight-bold" style="font-size: 0.85rem;">
+                                        ✓ Enrolled in Flywheel Roster
+                                    </span>
+                                </div>
+                            </div>
+                            <hr class="my-2">
+                            <div class="row g-2 small text-muted">
+                                <div class="col-md-4">
+                                    <span>🎯 <b>Peer Forum Guidance:</b> Host AMA and strategy sessions for junior batches.</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <span>📚 <b>Resource Sharing:</b> Share verified notes, mock tests, and interview insights.</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <span>🌟 <b>Ambassadorship:</b> Lead as an EGS DREAM BIG Campus Ambassador.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stage 5 Action Toolbar (Safe Step-Back to DEVELOP if needed) -->
+                <div class="border-top pt-3 mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <button type="button" class="btn btn-outline-warning text-dark font-weight-bold px-3 py-2" id="btn-revert-to-develop" style="border-radius: 8px;">
+                            🔄 Return to Stage 4: DEVELOP
+                        </button>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.78rem;">
+                            Need to re-adjust earlier preparation commitments or coaching plans? You can return to DEVELOP anytime.
+                        </small>
+                    </div>
+                    <div>
+                        <span class="badge bg-light text-success border px-3 py-2 font-weight-bold" style="font-size: 0.85rem;">
+                            🌟 Full 5Ds Journey Active: DREAM → DISCOVER → DECIDE → DEVELOP → DELIVER
+                        </span>
+                    </div>
+                </div>
                 {% else %}
                 <div class="alert alert-light border text-center p-4 my-2" style="border-radius: 10px;">
                     <span style="font-size: 2rem;">🔒</span>
@@ -546,8 +1769,22 @@
                             <label class="form-label font-weight-bold text-dark">1. Final Chosen Career Goal <span class="text-danger">*</span></label>
                             <select id="modal_final_goal" class="form-select form-select-lg" required>
                                 <option value="">-- Select Your Final Career Goal --</option>
+                                {% if student.narrow_goal_1 or student.narrow_goal_2 %}
+                                <optgroup label="🎯 Front-Runner Goals (Narrowed in DISCOVER)">
+                                    {% if student.narrow_goal_1 %}
+                                    <option value="{{ student.narrow_goal_1 }}" {% if (career_goal and career_goal.finalized_career_goal == student.narrow_goal_1) or student.final_chosen_career_goal == student.narrow_goal_1 %}selected{% endif %}>
+                                        ⭐ {{ student.narrow_goal_1 }}
+                                    </option>
+                                    {% endif %}
+                                    {% if student.narrow_goal_2 %}
+                                    <option value="{{ student.narrow_goal_2 }}" {% if (career_goal and career_goal.finalized_career_goal == student.narrow_goal_2) or student.final_chosen_career_goal == student.narrow_goal_2 %}selected{% endif %}>
+                                        🌟 {{ student.narrow_goal_2 }}
+                                    </option>
+                                    {% endif %}
+                                </optgroup>
+                                {% endif %}
                                 {% if career_choices and career_choices | length > 0 %}
-                                <optgroup label="🌟 Your Explored Top Choices (Exercise 2)">
+                                <optgroup label="📋 Explored Top 5 Career Choices (Stage 1: DREAM)">
                                     {% for choice in career_choices %}
                                     <option value="{{ choice.career_pathway }}" {% if (career_goal and career_goal.finalized_career_goal == choice.career_pathway) or student.final_chosen_career_goal == choice.career_pathway %}selected{% endif %}>
                                         {{ choice.career_pathway }}
@@ -567,15 +1804,15 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold text-dark">2. Personal Vision Statement <span class="text-danger">*</span></label>
-                            <textarea id="modal_vision_statement" class="form-control" rows="3" placeholder="Where do you see yourself, what impact do you want to create, and why is this your aspiration?" required>{{ (career_goal and career_goal.personal_vision_statement) or student.personal_vision_statement or '' }}</textarea>
-                            <small class="form-text text-muted">Articulate your personal ambition and core motivations.</small>
+                            <label class="form-label font-weight-bold text-dark">2. Personal Vision Statement (The 'Why', Inspiration & World Impact) <span class="text-danger">*</span></label>
+                            <textarea id="modal_vision_statement" class="form-control" rows="3" placeholder="Articulate your chosen goal, your 'why', what inspires you, and the impact you want to make to the world..." required>{{ (career_goal and career_goal.personal_vision_statement) or student.personal_vision_statement or '' }}</textarea>
+                            <small class="form-text text-muted">As presented on Day 2 of the flagship DECIDE event.</small>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold text-dark">3. A Promise to Self</label>
-                            <textarea id="modal_promise_to_self" class="form-control" rows="2" placeholder="I promise to myself that I will stay disciplined, attend mentorship sessions, and give 100% effort...">{{ (career_goal and career_goal.a_promise_to_self) or student.a_promise_to_self or '' }}</textarea>
-                            <small class="form-text text-muted">A personal pledge of accountability.</small>
+                            <label class="form-label font-weight-bold text-dark">3. A Promise to Self <span class="text-danger">*</span></label>
+                            <textarea id="modal_promise_to_self" class="form-control" rows="2" placeholder="I promise to myself that I will stay disciplined, attend mentorship sessions, and give 100% effort to achieve this goal..." required>{{ (career_goal and career_goal.a_promise_to_self) or student.a_promise_to_self or '' }}</textarea>
+                            <small class="form-text text-muted">A personal pledge of accountability declared in the flagship event.</small>
                         </div>
 
                         <div class="mb-3">
@@ -685,29 +1922,167 @@
         </div>
     </div>
 
+    <!-- Modal 4: Interactive Step-by-Step Success Framework Evaluation Modal -->
+    <div class="modal fade" id="successFrameworkModal" tabindex="-1" role="dialog" aria-labelledby="successFrameworkModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <!-- Modal Header -->
+                <div class="modal-header bg-success text-white py-3">
+                    <div>
+                        <h5 class="modal-title font-weight-bold mb-0" id="successFrameworkModalLabel">🌟 Monthly Habit & Success Check-in</h5>
+                        <small class="text-white-50">Quick 5-Question Step-by-Step Self-Evaluation</small>
+                    </div>
+                    <button type="button" class="close text-white border-0 bg-transparent" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close" style="font-size: 1.5rem;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <!-- Step Progress Indicator -->
+                <div class="bg-light px-4 py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="small font-weight-bold text-muted" id="sf-step-indicator">Question 1 of 5</span>
+                    <div class="progress" style="width: 140px; height: 6px; border-radius: 3px;">
+                        <div class="progress-bar bg-success" id="sf-step-progressbar" role="progressbar" style="width: 20%;"></div>
+                    </div>
+                </div>
+
+                <div class="modal-body p-4">
+                    <form id="form-success-framework" onsubmit="return false;">
+                        <!-- Question 1: Factor 2 (Newspaper) -->
+                        <div class="sf-question-step text-center py-3" id="sf-step-1">
+                            <span style="font-size: 2.5rem;" class="d-block mb-2">📰</span>
+                            <span class="badge bg-light text-primary mb-2 font-weight-bold">Factor 2: Awareness & Habit Building</span>
+                            <h5 class="font-weight-bold text-dark mb-2">Did you read the newspaper or editorial daily this month?</h5>
+                            <p class="text-muted small mb-4">Building awareness of national and international affairs without skipping days.</p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <button type="button" class="btn btn-outline-danger btn-lg px-4 py-2 font-weight-bold btn-sf-choice" data-target="sf_daily_newspaper" data-val="0" style="min-width: 130px; border-radius: 10px;">
+                                    ❌ No
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-lg px-4 py-2 font-weight-bold btn-sf-choice" data-target="sf_daily_newspaper" data-val="1" style="min-width: 130px; border-radius: 10px;">
+                                    ✅ Yes
+                                </button>
+                            </div>
+                            <input type="hidden" id="sf_daily_newspaper" name="sf_daily_newspaper" value="{{ 1 if student.sf_daily_newspaper else 0 }}">
+                        </div>
+
+                        <!-- Question 2: Factor 4 (PYQ & Syllabus) -->
+                        <div class="sf-question-step text-center py-3 d-none" id="sf-step-2">
+                            <span style="font-size: 2.5rem;" class="d-block mb-2">🔍</span>
+                            <span class="badge bg-light text-primary mb-2 font-weight-bold">Factor 4: Exam Syllabus & Aptitude</span>
+                            <h5 class="font-weight-bold text-dark mb-2">Did you review syllabus & past question papers (PYQs) for your target goals?</h5>
+                            <p class="text-muted small mb-4">Understanding the exam pattern, cutoff trends, and difficulty levels.</p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <button type="button" class="btn btn-outline-danger btn-lg px-4 py-2 font-weight-bold btn-sf-choice" data-target="sf_pyq_syllabus_reviewed" data-val="0" style="min-width: 130px; border-radius: 10px;">
+                                    ❌ No
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-lg px-4 py-2 font-weight-bold btn-sf-choice" data-target="sf_pyq_syllabus_reviewed" data-val="1" style="min-width: 130px; border-radius: 10px;">
+                                    ✅ Yes
+                                </button>
+                            </div>
+                            <input type="hidden" id="sf_pyq_syllabus_reviewed" name="sf_pyq_syllabus_reviewed" value="{{ 1 if student.sf_pyq_syllabus_reviewed else 0 }}">
+                        </div>
+
+                        <!-- Question 3: Factor 2 & 5 (Peer Forum) -->
+                        <div class="sf-question-step text-center py-3 d-none" id="sf-step-3">
+                            <span style="font-size: 2.5rem;" class="d-block mb-2">👥</span>
+                            <span class="badge bg-light text-primary mb-2 font-weight-bold">Factor 2 & 5: Peer Forums & Networks</span>
+                            <h5 class="font-weight-bold text-dark mb-2">Are you actively participating in your career peer forum?</h5>
+                            <p class="text-muted small mb-4">Engaging with fellow aspirants and Student Ambassadors on WhatsApp/Telegram.</p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <button type="button" class="btn btn-outline-danger btn-lg px-4 py-2 font-weight-bold btn-sf-choice" data-target="sf_peer_forum_active" data-val="0" style="min-width: 130px; border-radius: 10px;">
+                                    ❌ No
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-lg px-4 py-2 font-weight-bold btn-sf-choice" data-target="sf_peer_forum_active" data-val="1" style="min-width: 130px; border-radius: 10px;">
+                                    ✅ Yes
+                                </button>
+                            </div>
+                            <input type="hidden" id="sf_peer_forum_active" name="sf_peer_forum_active" value="{{ 1 if student.sf_peer_forum_active else 0 }}">
+                        </div>
+
+                        <!-- Question 4: Factor 5 (Time Management Routine) -->
+                        <div class="sf-question-step text-center py-3 d-none" id="sf-step-4">
+                            <span style="font-size: 2.5rem;" class="d-block mb-2">⏰</span>
+                            <span class="badge bg-light text-primary mb-2 font-weight-bold">Factor 5: Resilience & Time Management</span>
+                            <h5 class="font-weight-bold text-dark mb-2">How consistently did you follow a fixed daily study routine?</h5>
+                            <p class="text-muted small mb-3">Rate your daily study discipline and timetable adherence.</p>
+                            <div class="d-grid gap-2 text-start max-w-md mx-auto" style="max-width: 420px;">
+                                <button type="button" class="btn btn-outline-secondary p-2 text-start font-weight-bold btn-sf-routine" data-val="2">
+                                    🔴 Irregular (studied 1-2 days/week)
+                                </button>
+                                <button type="button" class="btn btn-outline-primary p-2 text-start font-weight-bold btn-sf-routine" data-val="3">
+                                    🟡 Steady (fixed routine 3-4 days/week)
+                                </button>
+                                <button type="button" class="btn btn-outline-success p-2 text-start font-weight-bold btn-sf-routine" data-val="4">
+                                    🟢 Disciplined (consistent 5-6 days/week)
+                                </button>
+                                <button type="button" class="btn btn-outline-success p-2 text-start font-weight-bold btn-sf-routine" data-val="5">
+                                    🌟 Exceptional (daily time-blocking & routine)
+                                </button>
+                            </div>
+                            <input type="hidden" id="sf_routine_discipline" name="sf_routine_discipline" value="{{ student.sf_routine_discipline or 3 }}">
+                        </div>
+
+                        <!-- Question 5: Factor 3 (Skills & AI Learning) -->
+                        <div class="sf-question-step text-center py-3 d-none" id="sf-step-5">
+                            <span style="font-size: 2.5rem;" class="d-block mb-2">💡</span>
+                            <span class="badge bg-light text-primary mb-2 font-weight-bold">Factor 3: Skills & Mindset</span>
+                            <h5 class="font-weight-bold text-dark mb-2">Which specific new skill or AI tool did you learn this month?</h5>
+                            <p class="text-muted small mb-3">e.g., Prompt Engineering, Python, Financial Modeling, Public Speaking</p>
+                            <div class="max-w-md mx-auto mb-3" style="max-width: 420px;">
+                                <input type="text" class="form-control text-center" id="sf_skill_learning" name="sf_skill_learning" placeholder="Enter skill name (or None)" value="{{ student.sf_skill_learning or '' }}">
+                            </div>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button type="button" class="btn btn-success btn-lg px-4 py-2 font-weight-bold" id="btn-save-sf-eval" style="border-radius: 10px;">
+                                    💾 Complete & Calculate Score
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="sf-modal-alert" class="alert d-none mt-2 mb-0 py-2 small text-center" role="alert"></div>
+                    </form>
+                </div>
+
+                <div class="modal-footer bg-light d-flex justify-content-between" style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+                    <button type="button" class="btn btn-sm btn-outline-secondary font-weight-bold" id="btn-sf-prev" disabled>
+                        ⬅️ Previous
+                    </button>
+                    <span class="text-muted small">
+                        Current Score: <b>{{ success_framework_score }}%</b>
+                    </span>
+                    <button type="button" class="btn btn-sm btn-secondary font-weight-bold" data-dismiss="modal" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
     (function init_dashboard_tabs_and_modals() {
         const studentId = "{{ student_id }}";
         const token = "{{ access_key }}";
 
         // Tab Switching Support (handles Bootstrap 4, Bootstrap 5, and vanilla fallback)
-        const tabButtons = document.querySelectorAll('#pills-tab button, #pills-tab a');
+        const tabButtons = document.querySelectorAll('#pills-tab button, #pills-tab a, #discover-subtabs button, #discover-subtabs a');
         tabButtons.forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const targetSelector = btn.getAttribute('data-target') || btn.getAttribute('data-bs-target') || btn.getAttribute('href');
                 if (!targetSelector) return;
 
-                tabButtons.forEach(function(b) {
-                    b.classList.remove('active', 'bg-primary', 'text-white', 'shadow-sm', 'font-weight-bold');
-                    b.classList.add('bg-light');
-                    b.setAttribute('aria-selected', 'false');
-                });
+                const parentNav = btn.closest('ul');
+                if (parentNav) {
+                    parentNav.querySelectorAll('button, a').forEach(function(b) {
+                        b.classList.remove('active', 'bg-primary', 'text-white', 'shadow-sm', 'font-weight-bold');
+                        b.setAttribute('aria-selected', 'false');
+                    });
+                }
                 btn.classList.add('active', 'bg-primary', 'text-white', 'shadow-sm', 'font-weight-bold');
-                btn.classList.remove('bg-light');
                 btn.setAttribute('aria-selected', 'true');
 
-                const tabPanes = document.querySelectorAll('#pills-tabContent .tab-pane');
+                // Determine container: main tab content or discover subtabs content
+                const isSubTab = parentNav && parentNav.id === 'discover-subtabs';
+                const containerSelector = isSubTab ? '#discover-subtabs-content' : '#pills-tabContent';
+                const tabPanes = document.querySelectorAll(containerSelector + ' > .tab-pane');
                 tabPanes.forEach(function(pane) {
                     pane.classList.remove('show', 'active');
                 });
@@ -755,8 +2130,181 @@
             }
         }
 
+        // Save Top 5 Career Goals (Stage 1: DREAM)
+        const saveGoalsBtn = document.getElementById('btn-save-goals');
+        const saveAlertBox = document.getElementById('save-alert');
+        const checkboxes = document.querySelectorAll('.pathway-checkbox');
+        const counterEl = document.getElementById('selected-counter');
+
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('.pathway-checkbox:checked');
+            if (counterEl) {
+                counterEl.innerText = checked.length + "/5 Selected";
+            }
+        }
+
+        checkboxes.forEach(function(chk) {
+            chk.addEventListener('change', function() {
+                const checked = document.querySelectorAll('.pathway-checkbox:checked');
+                if (checked.length > 5) {
+                    this.checked = false;
+                    if (saveAlertBox) {
+                        saveAlertBox.className = 'alert alert-warning mb-3 py-2';
+                        saveAlertBox.innerText = "{{ _('You can select a maximum of 5 Career Goals.') }}";
+                        saveAlertBox.classList.remove('d-none');
+                    }
+                    return;
+                }
+                if (saveAlertBox) {
+                    saveAlertBox.classList.add('d-none');
+                }
+                updateSelectedCount();
+            });
+        });
+
+        if (saveGoalsBtn) {
+            saveGoalsBtn.addEventListener('click', function() {
+                const selected = [];
+                document.querySelectorAll('.pathway-checkbox:checked').forEach(function(c) {
+                    selected.push(c.value);
+                });
+
+                if (selected.length === 0) {
+                    saveAlertBox.className = 'alert alert-danger mb-3 py-2';
+                    saveAlertBox.innerText = "{{ _('Please select at least 1 Career Goal.') }}";
+                    saveAlertBox.classList.remove('d-none');
+                    return;
+                }
+
+                if (selected.length !== 5) {
+                    saveAlertBox.className = 'alert alert-warning mb-3 py-2';
+                    saveAlertBox.innerText = "{{ _('Please select exactly 5 Career Goals to complete Stage 1: DREAM.') }}";
+                    saveAlertBox.classList.remove('d-none');
+                    return;
+                }
+
+                saveGoalsBtn.disabled = true;
+                saveGoalsBtn.innerText = "{{ _('Saving...') }}";
+                saveAlertBox.className = 'alert d-none mb-3 py-2';
+
+                frappe.call({
+                    method: "dreambig_egs.api.save_career_goals",
+                    args: {
+                        student_id: studentId,
+                        token: token,
+                        goals: JSON.stringify(selected)
+                    },
+                    callback: function(r) {
+                        saveGoalsBtn.disabled = false;
+                        saveGoalsBtn.innerText = "💾 {{ _('Save My 5 Career Goals') }}";
+
+                        if (r.message && r.message.status === 'success') {
+                            saveAlertBox.className = 'alert alert-success mb-3 py-2';
+                            saveAlertBox.innerText = r.message.message;
+                            saveAlertBox.classList.remove('d-none');
+
+                            frappe.show_alert({
+                                message: r.message.message,
+                                indicator: 'green'
+                            }, 4);
+
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 800);
+                        } else {
+                            saveAlertBox.className = 'alert alert-danger mb-3 py-2';
+                            saveAlertBox.innerText = r.message ? r.message.message : "{{ _('Failed to save career goals.') }}";
+                            saveAlertBox.classList.remove('d-none');
+                        }
+                    },
+                    error: function(err) {
+                        saveGoalsBtn.disabled = false;
+                        saveGoalsBtn.innerText = "💾 {{ _('Save My 5 Career Goals') }}";
+                        saveAlertBox.className = 'alert alert-danger mb-3 py-2';
+                        saveAlertBox.innerText = "{{ _('An error occurred. Please try again.') }}";
+                        saveAlertBox.classList.remove('d-none');
+                    }
+                });
+            });
+        }
+
+        // Stage 2: Save Narrowed Choices (1-2 Front-Runners)
+        const saveNarrowBtn = document.getElementById('btn-save-narrow-goals');
+        const narrowAlertBox = document.getElementById('narrow-alert');
+        if (saveNarrowBtn) {
+            saveNarrowBtn.addEventListener('click', function() {
+                const g1 = document.getElementById('select_narrow_1').value;
+                const g2 = document.getElementById('select_narrow_2').value;
+
+                if (!g1) {
+                    narrowAlertBox.className = 'alert alert-danger mt-2 mb-0 py-1 small text-center';
+                    narrowAlertBox.innerText = "{{ _('Please select at least Choice 1.') }}";
+                    narrowAlertBox.classList.remove('d-none');
+                    return;
+                }
+
+                if (g1 === g2 && g2) {
+                    narrowAlertBox.className = 'alert alert-warning mt-2 mb-0 py-1 small text-center';
+                    narrowAlertBox.innerText = "{{ _('Choice 1 and Choice 2 cannot be the same.') }}";
+                    narrowAlertBox.classList.remove('d-none');
+                    return;
+                }
+
+                saveNarrowBtn.disabled = true;
+                saveNarrowBtn.innerText = "Saving...";
+                narrowAlertBox.className = 'alert d-none mt-2 mb-0 py-1 small text-center';
+
+                frappe.call({
+                    method: "dreambig_egs.api.save_narrowed_goals",
+                    args: { student_id: studentId, token: token, goal_1: g1, goal_2: g2 },
+                    callback: function(r) {
+                        saveNarrowBtn.disabled = false;
+                        saveNarrowBtn.innerText = "Save Choices";
+                        if (r.message && r.message.status === 'success') {
+                            frappe.show_alert({ message: r.message.message, indicator: 'green' }, 3);
+                            setTimeout(function() { window.location.reload(); }, 600);
+                        } else {
+                            narrowAlertBox.className = 'alert alert-danger mt-2 mb-0 py-1 small text-center';
+                            narrowAlertBox.innerText = r.message ? r.message.message : "Error saving choices.";
+                            narrowAlertBox.classList.remove('d-none');
+                        }
+                    }
+                });
+            });
+        }
+
+        // Stage 2: Register for Specific Online Session
+        const sessionAlert = document.getElementById('session-reg-alert');
+        document.querySelectorAll('.btn-reg-session').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const sId = btn.getAttribute('data-session-id');
+                btn.disabled = true;
+                btn.innerText = "Registering...";
+                if (sessionAlert) sessionAlert.className = 'alert d-none my-2 py-2 small text-center';
+
+                frappe.call({
+                    method: "dreambig_egs.api.register_specific_session",
+                    args: { student_id: studentId, token: token, session_id: sId },
+                    callback: function(r) {
+                        if (r.message && r.message.status === 'success') {
+                            frappe.show_alert({ message: r.message.message, indicator: 'green' }, 4);
+                            setTimeout(function() { window.location.reload(); }, 600);
+                        } else {
+                            btn.disabled = false;
+                            btn.innerText = "Register for Session";
+                            if (sessionAlert) {
+                                sessionAlert.className = 'alert alert-danger my-2 py-2 small text-center';
+                                sessionAlert.innerText = r.message ? r.message.message : "Registration failed.";
+                                sessionAlert.classList.remove('d-none');
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
         // DECIDE Modal Logic
-        const openDecideBtns = document.querySelectorAll('#btn-open-decide-modal, #btn-update-decide-modal');
+        const openDecideBtns = document.querySelectorAll('#btn-open-decide-modal, #btn-update-decide-modal, #btn-open-decide-modal-stage3');
         const saveDecideBtn = document.getElementById('btn-save-decide-modal');
         const decideAlertBox = document.getElementById('modal-alert');
         const decideModalEl = document.getElementById('decideModal');
@@ -862,16 +2410,18 @@
         }
 
         // Re-evaluate Modal Logic (Discover 2B Step-Back)
-        const openRevertBtn = document.getElementById('btn-open-reevaluate-modal');
+        const openRevertBtns = document.querySelectorAll('#btn-open-reevaluate-modal, #btn-open-reevaluate-modal-locked');
         const revertModalEl = document.getElementById('reevaluateModal');
         const confirmRevertBtn = document.getElementById('btn-confirm-revert');
         const revertAlertBox = document.getElementById('revert-modal-alert');
         const revertReasonInput = document.getElementById('revert_reason');
 
-        if (openRevertBtn && revertModalEl) {
-            openRevertBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                openModal(revertModalEl);
+        if (openRevertBtns.length && revertModalEl) {
+            openRevertBtns.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openModal(revertModalEl);
+                });
             });
         }
 
@@ -1093,58 +2643,60 @@
             }
         }
 
-        // Return from DEVELOP to DECIDE
-        const revertToDecideBtn = document.getElementById('btn-revert-to-decide');
-        if (revertToDecideBtn) {
-            revertToDecideBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                revertToDecideBtn.disabled = true;
-                showConfirm(
-                    "{{ _('Are you sure you want to step back? This will clear your current stage data.') }}",
-                    function() {
-                        revertToDecideBtn.disabled = true;
-                        revertToDecideBtn.innerText = "{{ _('Returning to DECIDE...') }}";
+        // Return from DEVELOP to DECIDE (Revise / Refine Career Goal)
+        const revertToDecideBtns = document.querySelectorAll('#btn-revert-to-decide, #btn-revert-to-decide-locked');
+        if (revertToDecideBtns.length) {
+            revertToDecideBtns.forEach(function(revertToDecideBtn) {
+                revertToDecideBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    revertToDecideBtn.disabled = true;
+                    showConfirm(
+                        "{{ _('Are you sure you want to revise your career goal? Under Core Activity e, you are free to refine your goal as you learn more. This will return your active stage to DECIDE.') }}",
+                        function() {
+                            revertToDecideBtn.disabled = true;
+                            revertToDecideBtn.innerText = "{{ _('Returning to DECIDE...') }}";
 
-                        frappe.call({
-                            method: "dreambig_egs.api.step_back_stage",
-                            args: {
-                                student_id: studentId,
-                                token: token,
-                                target_stage: "DECIDE"
-                            },
-                            callback: function(r) {
-                                revertToDecideBtn.disabled = false;
-                                revertToDecideBtn.innerText = "🔄 {{ _('Return to Stage 3: DECIDE') }}";
+                            frappe.call({
+                                method: "dreambig_egs.api.step_back_stage",
+                                args: {
+                                    student_id: studentId,
+                                    token: token,
+                                    target_stage: "DECIDE"
+                                },
+                                callback: function(r) {
+                                    revertToDecideBtn.disabled = false;
+                                    revertToDecideBtn.innerText = "🔄 {{ _('Revise / Refine Goal (Return to DECIDE)') }}";
 
-                                if (r.message && r.message.status === 'success') {
+                                    if (r.message && r.message.status === 'success') {
+                                        frappe.show_alert({
+                                            message: r.message.message,
+                                            indicator: 'green'
+                                        }, 4);
+                                        setTimeout(function() {
+                                            window.location.reload();
+                                        }, 800);
+                                    } else {
+                                        frappe.show_alert({
+                                            message: r.message ? r.message.message : "{{ _('Failed to return to DECIDE stage.') }}",
+                                            indicator: 'red'
+                                        }, 4);
+                                    }
+                                },
+                                error: function() {
+                                    revertToDecideBtn.disabled = false;
+                                    revertToDecideBtn.innerText = "🔄 {{ _('Revise / Refine Goal (Return to DECIDE)') }}";
                                     frappe.show_alert({
-                                        message: r.message.message,
-                                        indicator: 'green'
-                                    }, 4);
-                                    setTimeout(function() {
-                                        window.location.reload();
-                                    }, 800);
-                                } else {
-                                    frappe.show_alert({
-                                        message: r.message ? r.message.message : "{{ _('Failed to return to DECIDE stage.') }}",
+                                        message: "{{ _('An error occurred. Please try again.') }}",
                                         indicator: 'red'
                                     }, 4);
                                 }
-                            },
-                            error: function() {
-                                revertToDecideBtn.disabled = false;
-                                revertToDecideBtn.innerText = "🔄 {{ _('Return to Stage 3: DECIDE') }}";
-                                frappe.show_alert({
-                                    message: "{{ _('An error occurred. Please try again.') }}",
-                                    indicator: 'red'
-                                }, 4);
-                            }
-                        });
-                    },
-                    function() {
-                        revertToDecideBtn.disabled = false;
-                    }
-                );
+                            });
+                        },
+                        function() {
+                            revertToDecideBtn.disabled = false;
+                        }
+                    );
+                });
             });
         }
 
@@ -1245,6 +2797,160 @@
                         revertToDevelopBtn.disabled = false;
                     }
                 );
+            });
+        }
+
+        // Interactive Step-by-Step Success Framework Evaluation
+        let currentSfStep = 1;
+        const totalSfSteps = 5;
+        const sfStepIndicator = document.getElementById('sf-step-indicator');
+        const sfProgressBar = document.getElementById('sf-step-progressbar');
+        const sfPrevBtn = document.getElementById('btn-sf-prev');
+
+        function showSfStep(stepNum) {
+            currentSfStep = stepNum;
+            for (let i = 1; i <= totalSfSteps; i++) {
+                const el = document.getElementById('sf-step-' + i);
+                if (el) {
+                    if (i === stepNum) {
+                        el.classList.remove('d-none');
+                    } else {
+                        el.classList.add('d-none');
+                    }
+                }
+            }
+            if (sfStepIndicator) sfStepIndicator.innerText = "Question " + stepNum + " of " + totalSfSteps;
+            if (sfProgressBar) sfProgressBar.style.width = ((stepNum / totalSfSteps) * 100) + "%";
+            if (sfPrevBtn) sfPrevBtn.disabled = (stepNum === 1);
+        }
+
+        // Yes / No Choice buttons
+        document.querySelectorAll('.btn-sf-choice').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const targetId = btn.getAttribute('data-target');
+                const val = btn.getAttribute('data-val');
+                const hiddenInput = document.getElementById(targetId);
+                if (hiddenInput) hiddenInput.value = val;
+
+                // Visual active highlight
+                const parent = btn.closest('.sf-question-step');
+                if (parent) {
+                    parent.querySelectorAll('.btn-sf-choice').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                }
+
+                // Advance to next step smoothly
+                setTimeout(function() {
+                    if (currentSfStep < totalSfSteps) {
+                        showSfStep(currentSfStep + 1);
+                    }
+                }, 250);
+            });
+        });
+
+        // Routine rating buttons
+        document.querySelectorAll('.btn-sf-routine').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const val = btn.getAttribute('data-val');
+                const routineInput = document.getElementById('sf_routine_discipline');
+                if (routineInput) routineInput.value = val;
+
+                // Highlight chosen button
+                const parent = btn.closest('.sf-question-step');
+                if (parent) {
+                    parent.querySelectorAll('.btn-sf-routine').forEach(b => {
+                        b.classList.remove('active');
+                        b.style.backgroundColor = '';
+                    });
+                    btn.classList.add('active');
+                    btn.style.backgroundColor = '#e2e8f0';
+                }
+
+                setTimeout(function() {
+                    if (currentSfStep < totalSfSteps) {
+                        showSfStep(currentSfStep + 1);
+                    }
+                }, 250);
+            });
+        });
+
+        if (sfPrevBtn) {
+            sfPrevBtn.addEventListener('click', function() {
+                if (currentSfStep > 1) {
+                    showSfStep(currentSfStep - 1);
+                }
+            });
+        }
+
+        // Save Success Framework Monthly Evaluation
+        const saveSfBtn = document.getElementById('btn-save-sf-eval');
+        const sfModalAlert = document.getElementById('sf-modal-alert');
+        if (saveSfBtn) {
+            saveSfBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                saveSfBtn.disabled = true;
+                saveSfBtn.innerText = "Evaluating...";
+                if (sfModalAlert) sfModalAlert.classList.add('d-none');
+
+                const dailyNewspaper = parseInt(document.getElementById('sf_daily_newspaper').value || '0', 10);
+                const pyqReviewed = parseInt(document.getElementById('sf_pyq_syllabus_reviewed').value || '0', 10);
+                const peerActive = parseInt(document.getElementById('sf_peer_forum_active').value || '0', 10);
+                const routineVal = parseInt(document.getElementById('sf_routine_discipline').value || '3', 10);
+                const skillLearning = (document.getElementById('sf_skill_learning').value || '').trim();
+
+                frappe.call({
+                    method: "dreambig_egs.api.submit_success_framework_eval",
+                    args: {
+                        student_id: studentId,
+                        access_key: token,
+                        daily_newspaper: dailyNewspaper,
+                        routine_discipline: routineVal,
+                        skill_learning: skillLearning,
+                        pyq_syllabus_reviewed: pyqReviewed,
+                        peer_forum_active: peerActive
+                    },
+                    callback: function(r) {
+                        saveSfBtn.disabled = false;
+                        saveSfBtn.innerText = "💾 Complete & Calculate Score";
+                        if (r.message && r.message.status === 'success') {
+                            if (sfModalAlert) {
+                                sfModalAlert.className = 'alert alert-success mt-2 mb-0 py-2 small text-center';
+                                sfModalAlert.innerText = r.message.message;
+                                sfModalAlert.classList.remove('d-none');
+                            }
+                            frappe.show_alert({
+                                message: r.message.message,
+                                indicator: 'green'
+                            }, 4);
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 800);
+                        } else {
+                            if (sfModalAlert) {
+                                sfModalAlert.className = 'alert alert-danger mt-2 mb-0 py-2 small text-center';
+                                sfModalAlert.innerText = r.message ? r.message.message : "Failed to save evaluation.";
+                                sfModalAlert.classList.remove('d-none');
+                            }
+                            frappe.show_alert({
+                                message: r.message ? r.message.message : "Failed to save evaluation.",
+                                indicator: 'red'
+                            }, 4);
+                        }
+                    },
+                    error: function() {
+                        saveSfBtn.disabled = false;
+                        saveSfBtn.innerText = "💾 Complete & Calculate Score";
+                        if (sfModalAlert) {
+                            sfModalAlert.className = 'alert alert-danger mt-2 mb-0 py-2 small text-center';
+                            sfModalAlert.innerText = "Server error occurred. Please try again.";
+                            sfModalAlert.classList.remove('d-none');
+                        }
+                        frappe.show_alert({
+                            message: "Server error occurred. Please try again.",
+                            indicator: 'red'
+                        }, 4);
+                    }
+                });
             });
         }
     })();

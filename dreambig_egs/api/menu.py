@@ -126,75 +126,165 @@ def get_student_menu(for_user: str = None) -> dict:
         f"Select an option below to manage your Dream Big journey:"
     )
 
+    # Fetch student's shortlisted goals count
+    saved_goals_count = frappe.db.count(
+        "EGS Student Career Choice",
+        {"parent": stu_id, "parenttype": "EGS Student Participant"}
+    )
+
     options = []
 
-    # 1. Orientation Event Check-in & Meal Coupon (if not yet checked in)
+    # RULE 1: If NOT Checked-In, ONLY Event Check-In is visible (along with WebApp & Logout)
     if event_status != "Checked-In":
+        welcome = (
+            f"🎓 *Welcome, {student_name}!*\n"
+            f"🆔 `{stu_id}` | 🏷️ *{badge}*\n\n"
+            f"📍 *Event Attendance Required*\n"
+            f"You have registered for the Dream Big EGS Orientation. Please check in on the day of the event using the QR code at the venue to unlock Stage 1 (DREAM) & your Food Coupon."
+        )
         options.append({
             "id": "event_checkin",
             "label": "🎟️ Event Check-In",
-            "desc": "Confirm presence & unlock Food Coupon",
+            "desc": "Check in using event QR / passcode",
             "action": "event_checkin",
         })
-
-    # 2. Layer 2: Periodic Follow-Up Check-In (Core intervention from Docx)
-    options.append({
-        "id": "followup_checkin",
-        "label": "📋 Follow-Up Check-In",
-        "desc": "Self-assessment & dated commitment",
-        "action": "followup_checkin",
-    })
-
-    # 3. Stage-Specific Primary Actions (Mirrors my_dream_big.html 5Ds Tabs)
-    if "DREAM" in stage:
         options.append({
-            "id": "explore_careers",
-            "label": "💭 Explore Careers",
-            "desc": "Shortlist top 5 aspirational paths",
-            "action": "explore_careers",
+            "id": "open_webapp",
+            "label": "📱 Open Dream Big WebApp",
+            "desc": "View Event Details & Registration",
+            "action": "open_webapp",
+            "url": f"{get_url()}/my-dream-big?id={stu_id}&key={token}",
         })
-    elif "DISCOVER" in stage:
+        options.append({
+            "id": "logout",
+            "label": "🚪 Logout / Switch Account",
+            "desc": "Unlink this chat account",
+            "action": "logout",
+        })
+        return {
+            "authenticated": True,
+            "student_id": stu_id,
+            "student_name": student_name,
+            "stage": stage,
+            "event_status": event_status,
+            "welcome_message": welcome,
+            "options": options,
+            "count": len(options),
+        }
+
+    # RULE 2: If Checked-In, check 5Ds Stage & Goals
+    # Stage 1: DREAM - On-the-spot selection of 5 career goals
+    if "DREAM" in stage or saved_goals_count < 5:
+        welcome = (
+            f"🎓 *Welcome, {student_name}!*\n"
+            f"🆔 `{stu_id}` | 🏷️ *Stage 1: DREAM*\n\n"
+            f"🎉 *Checked in to Event!*\n"
+            f"You have selected *{saved_goals_count}/5* Dream Big career goals.\n"
+            f"Complete your on-the-spot selection of 5 goals to advance to Stage 2: DISCOVER."
+        )
+        options.append({
+            "id": "select_5_goals",
+            "label": f"💭 Select 5 Goals ({saved_goals_count}/5)",
+            "desc": "Choose 5 aspirational career paths",
+            "action": "select_5_goals",
+        })
+        options.append({
+            "id": "student_profile",
+            "label": "👤 My Profile & Meal Coupon",
+            "desc": "Registration info & food coupon",
+            "action": "student_profile",
+        })
+        options.append({
+            "id": "open_webapp",
+            "label": "📱 Open Dream Big WebApp",
+            "desc": "Interactive 5Ds Dashboard",
+            "action": "open_webapp",
+            "url": f"{get_url()}/my-dream-big?id={stu_id}&key={token}",
+        })
+        options.append({
+            "id": "logout",
+            "label": "🚪 Logout / Switch Account",
+            "desc": "Unlink this chat account",
+            "action": "logout",
+        })
+        return {
+            "authenticated": True,
+            "student_id": stu_id,
+            "student_name": student_name,
+            "stage": "DREAM",
+            "event_status": event_status,
+            "welcome_message": welcome,
+            "options": options,
+            "count": len(options),
+        }
+
+    # RULE 3: Checked-In AND 5 Goals Selected -> Stages 2 to 5
+    if "DISCOVER" in stage:
         options.append({
             "id": "view_shortlist",
-            "label": "📋 View Shortlist",
-            "desc": "Inspect & refine top 5 choices",
+            "label": "📋 View Shortlist (5 Goals)",
+            "desc": "Inspect top 5 choices",
             "action": "view_shortlist",
         })
         options.append({
+            "id": "followup_checkin",
+            "label": "📋 Follow-Up Check-In",
+            "desc": "Self-assessment & progress check",
+            "action": "followup_checkin",
+        })
+        options.append({
             "id": "advance_decide",
-            "label": "🎯 Finalize Decision",
-            "desc": "Lock in career path & promise to self",
+            "label": "🎯 Finalize Decision (Stage 3)",
+            "desc": "Declare commitment & Promise to Self",
             "action": "advance_decide",
         })
     elif "DECIDE" in stage:
         options.append({
             "id": "view_commitment",
             "label": "🎯 Chosen Career & Promise",
-            "desc": "Inspect goal & personal vision statement",
+            "desc": "Inspect single goal & vision statement",
             "action": "view_commitment",
         })
         options.append({
+            "id": "followup_checkin",
+            "label": "📋 Follow-Up Check-In",
+            "desc": "Quarterly accountability review",
+            "action": "followup_checkin",
+        })
+        options.append({
             "id": "advance_develop",
-            "label": "🚀 Advance to DEVELOP",
-            "desc": "Unlock Stage 4 mentor matching",
+            "label": "🚀 Advance to DEVELOP (Stage 4)",
+            "desc": "Unlock mentorship & prep roadmap",
             "action": "advance_develop",
         })
     elif "DEVELOP" in stage:
         options.append({
             "id": "mentorship",
             "label": "🤝 Mentorship & Milestones",
-            "desc": "View mentor match & progress",
+            "desc": "Domain DB coordinator & mentor match",
             "action": "mentorship",
+        })
+        options.append({
+            "id": "followup_checkin",
+            "label": "📋 Follow-Up Check-In",
+            "desc": "Quarterly progress check",
+            "action": "followup_checkin",
         })
     elif "DELIVER" in stage:
         options.append({
             "id": "certificates",
-            "label": "🏆 Accomplishments",
-            "desc": "View validated certificates",
+            "label": "🏆 Accomplishments & Flywheel",
+            "desc": "Exam success & junior mentoring",
             "action": "certificates",
         })
+        options.append({
+            "id": "followup_checkin",
+            "label": "📋 Follow-Up Check-In",
+            "desc": "Alumni giving back log",
+            "action": "followup_checkin",
+        })
 
-    # 4. Universal Student Support Services (Layer 3: Anchor Escalation)
+    # Universal Options
     options.append({
         "id": "student_profile",
         "label": "👤 Student Profile",
@@ -209,16 +299,14 @@ def get_student_menu(for_user: str = None) -> dict:
     })
     options.append({
         "id": "open_webapp",
-        "label": "📱 Open Dashboard WebApp",
+        "label": "📱 Open Dream Big WebApp",
         "desc": "Interactive PWA Dashboard",
         "action": "open_webapp",
         "url": f"{get_url()}/my-dream-big?id={stu_id}&key={token}",
     })
-
-    # 5. Logout / Switch User
     options.append({
         "id": "logout",
-        "label": "🚪 Logout",
+        "label": "🚪 Logout / Switch Account",
         "desc": "Unlink this chat account",
         "action": "logout",
     })

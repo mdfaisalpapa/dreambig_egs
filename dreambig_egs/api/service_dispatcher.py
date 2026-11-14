@@ -37,6 +37,7 @@ def get_student_service_details(action_id: str, for_user: str = None) -> dict:
                 "city",
                 "course",
                 "university_college",
+                "event",
                 "final_chosen_career_goal",
                 "personal_vision_statement",
                 "a_promise_to_self",
@@ -131,34 +132,70 @@ def get_student_service_details(action_id: str, for_user: str = None) -> dict:
             coupon_info = f"\n🎟️ *Food Coupon:* `{student.get('food_coupon_code')}`" if student.get("food_coupon_code") else ""
             prompt = (
                 f"✅ *Already Checked-In!*\n\n"
-                f"You have confirmed your presence at the cohort orientation session.{coupon_info}\n\n"
-                f"Your stage is now active. Explore careers or complete your check-in."
+                f"You have confirmed your presence at the physical event.{coupon_info}\n\n"
+                f"Please proceed with *Stage 1: DREAM* by shortlisting your 5 career goals."
             )
-        else:
-            try:
-                frappe.db.set_value("EGS Student Participant", student["name"], "event_status", "Checked-In")
-                if getattr(student, "current_5ds_stage", None) in (None, "", "DREAM"):
-                    frappe.db.set_value("EGS Student Participant", student["name"], "current_5ds_stage", "DISCOVER")
+            return {
+                "title": "Event Check-In",
+                "prompt": prompt,
+                "options": [
+                    {"label": "💭 Select 5 Dream Goals", "value": "select_5_goals"},
+                    {"label": "🔙 Back to Main Menu", "value": "menu"},
+                ],
+            }
 
+        # Check event date validation
+        event_doc = None
+        if student.get("event"):
+            event_doc = frappe.db.get_value("EGS Event", student.get("event"), ["name", "event_name", "event_date", "allow_digital_checkins", "allow_digital_food_coupons"], as_dict=True)
+
+        today_str = str(frappe.utils.today())
+        if event_doc and event_doc.get("event_date"):
+            evt_date_str = str(event_doc.get("event_date"))[:10]
+            if today_str != evt_date_str:
+                return {
+                    "title": "Event Check-In",
+                    "prompt": (
+                        f"📅 *Event Check-In Not Yet Open*\n\n"
+                        f"Event: **{event_doc.get('event_name') or event_doc.get('name')}**\n"
+                        f"Date: **{evt_date_str}**\n\n"
+                        f"Check-in is permitted **only on the day of the event** after scanning the QR code pasted at the venue.\n"
+                        f"Today's date is `{today_str}`."
+                    ),
+                    "options": [{"label": "🔙 Back to Main Menu", "value": "menu"}],
+                }
+
+        try:
+            frappe.db.set_value("EGS Student Participant", student["name"], "event_status", "Checked-In")
+            frappe.db.set_value("EGS Student Participant", student["name"], "physical_attendance", 1)
+            # Student enters Stage 1: DREAM
+            frappe.db.set_value("EGS Student Participant", student["name"], "current_5ds_stage", "DREAM")
+
+            coupon = student.get("food_coupon_code")
+            if not coupon:
                 coupon = f"MEAL-{frappe.generate_hash(length=6).upper()}"
                 frappe.db.set_value("EGS Student Participant", student["name"], "food_coupon_code", coupon)
                 frappe.db.set_value("EGS Student Participant", student["name"], "food_coupon_issued", 1)
-                frappe.db.commit()
+            frappe.db.commit()
 
-                prompt = (
-                    f"🎉 *Orientation Check-In Successful!*\n\n"
-                    f"Welcome to the session, **{student.get('student_name')}**!\n"
-                    f"🎟️ *Your Digital Food Coupon:* `{coupon}`\n\n"
-                    f"Present this passcode at the lunch/refreshment counter.\n"
-                    f"Your 5Ds stage has advanced to **Stage 2: DISCOVER**!"
-                )
-            except Exception as e:
-                prompt = f"⚠️ Check-in encountered an issue: {e}"
+            prompt = (
+                f"🎉 *Event Check-In Successful!*\n\n"
+                f"Welcome to Dream Big EGS, **{student.get('student_name')}**!\n"
+                f"🎟️ *Your Digital Food Coupon:* `{coupon}`\n\n"
+                f"Your attendance is verified. You are now in **Stage 1: DREAM**.\n"
+                f"Next step: On-the-spot career selection exercise — shortlist **5 goals** from the 40+ career pathways."
+            )
+        except Exception as e:
+            prompt = f"⚠️ Check-in encountered an issue: {e}"
 
         return {
             "title": "Event Check-In",
             "prompt": prompt,
-            "options": [{"label": "🔙 Back to Main Menu", "value": "menu"}],
+            "options": [
+                {"label": "💭 Select 5 Dream Goals", "value": "select_5_goals"},
+                {"label": "📱 Open Dashboard WebApp", "value": "open_webapp", "url": webapp_url},
+                {"label": "🔙 Back to Main Menu", "value": "menu"},
+            ],
         }
 
     # --- 3. Follow-Up Check-In Flow (Layer 2: Nudge & Self-Assessment) ---
@@ -340,6 +377,147 @@ def get_student_service_details(action_id: str, for_user: str = None) -> dict:
                 {"label": "📱 Open Interactive Explorer", "value": "open_webapp", "url": webapp_url},
                 {"label": "🔙 Back to Main Menu", "value": "menu"},
             ],
+        }
+
+    # --- 4. Stage 1: DREAM - Select 5 Career Goals ---
+    elif action_id.startswith("select_5_goals") or action_id.startswith("toggle_goal_") or action_id == "save_5_goals" or action_id.startswith("grp_"):
+        if not student:
+            return {"title": "Select 5 Goals", "prompt": "⚠️ Student record required.", "options": [{"label": "🔙 Back", "value": "menu"}]}
+
+        from dreambig_egs.dreambig_egs.doctype.egs_student_participant.egs_student_participant import get_all_career_pathways
+
+        # Current shortlisted goals
+        current_choices = frappe.get_all(
+            "EGS Student Career Choice",
+            filters={"parent": student["name"], "parenttype": "EGS Student Participant"},
+            fields=["career_pathway"],
+            order_by="idx asc",
+        )
+        selected_goals = [c["career_pathway"] for c in current_choices]
+
+        # Handle toggle action if triggered
+        if action_id.startswith("toggle_goal_"):
+            goal_key = action_id[len("toggle_goal_"):].strip()
+            # Match goal_key to actual pathway name
+            matching = frappe.get_all("EGS Career Pathway", filters={"name": ["like", f"%{goal_key}%"]}, limit=1)
+            target_goal = matching[0].name if matching else goal_key
+
+            if target_goal in selected_goals:
+                selected_goals.remove(target_goal)
+            else:
+                if len(selected_goals) >= 5:
+                    return {
+                        "title": "Stage 1: DREAM",
+                        "prompt": (
+                            f"⚠️ *Goal Limit Reached (5/5)*\n\n"
+                            f"You have already shortlisted 5 career goals:\n"
+                            + "\n".join([f"  {idx+1}. {g}" for idx, g in enumerate(selected_goals)])
+                            + "\n\nTap *Save 5 Goals* or remove a goal before adding another."
+                        ),
+                        "options": [
+                            {"label": "💾 Save 5 Goals & Complete DREAM", "value": "save_5_goals"},
+                            {"label": "📋 View/Edit Goals", "value": "select_5_goals"},
+                            {"label": "🔙 Back to Main Menu", "value": "menu"},
+                        ],
+                    }
+                selected_goals.append(target_goal)
+
+            # Update in DB
+            frappe.db.delete("EGS Student Career Choice", {"parent": student["name"], "parenttype": "EGS Student Participant"})
+            for idx, g in enumerate(selected_goals):
+                frappe.get_doc({
+                    "doctype": "EGS Student Career Choice",
+                    "parent": student["name"],
+                    "parenttype": "EGS Student Participant",
+                    "parentfield": "top_5_career_goals",
+                    "career_pathway": g,
+                    "idx": idx + 1,
+                }).insert(ignore_permissions=True)
+            frappe.db.commit()
+
+        # Handle Save 5 Goals finalization
+        if action_id == "save_5_goals":
+            if len(selected_goals) < 5:
+                return {
+                    "title": "Stage 1: DREAM",
+                    "prompt": (
+                        f"⚠️ *Incomplete Shortlist ({len(selected_goals)}/5)*\n\n"
+                        f"Please select exactly 5 goals from the pathways list before saving.\n"
+                        f"Current selections:\n"
+                        + "\n".join([f"  {idx+1}. {g}" for idx, g in enumerate(selected_goals)])
+                    ),
+                    "options": [
+                        {"label": "💭 Continue Selecting Goals", "value": "select_5_goals"},
+                        {"label": "📱 Select in WebApp (Easy)", "value": "open_webapp", "url": webapp_url},
+                        {"label": "🔙 Back to Main Menu", "value": "menu"},
+                    ],
+                }
+
+            # Advance to Stage 2: DISCOVER
+            frappe.db.set_value("EGS Student Participant", student["name"], "current_5ds_stage", "DISCOVER")
+            frappe.db.commit()
+
+            return {
+                "title": "Stage 1 Complete: DREAM",
+                "prompt": (
+                    f"🎉 *Stage 1: DREAM Complete!*\n\n"
+                    f"Congratulations, **{student.get('student_name')}**! Your 5 DREAM BIG Career Goals have been locked:\n"
+                    + "\n".join([f"  {idx+1}. {g}" for idx, g in enumerate(selected_goals)])
+                    + "\n\n🌟 *You have advanced to Stage 2: DISCOVER!*\n"
+                    f"Over the next few months, you will research these paths, connect with DB Domain Coordinators, and narrow down to 1–2 final goals."
+                ),
+                "options": [
+                    {"label": "📋 View Shortlist (Stage 2)", "value": "view_shortlist"},
+                    {"label": "📱 Open Dashboard WebApp", "value": "open_webapp", "url": webapp_url},
+                    {"label": "🔙 Back to Main Menu", "value": "menu"},
+                ],
+            }
+
+        # Show Category / Group Browse or Selected Summary
+        all_paths = get_all_career_pathways()
+        shortlist_display = "\n".join([f"  ✅ {idx+1}. {g}" for idx, g in enumerate(selected_goals)]) if selected_goals else "  _(No goals shortlisted yet)_"
+
+        prompt = (
+            f"💭 *Stage 1: DREAM — On-the-spot Goal Selection*\n\n"
+            f"Shortlist exactly **5 Career Goals** representing your highest aspirations.\n\n"
+            f"*Current Shortlist ({len(selected_goals)}/5):*\n{shortlist_display}\n\n"
+            f"You can choose career goals below or tap *Open WebApp* for the 1-click checklist:"
+        )
+
+        options = []
+        if len(selected_goals) == 5:
+            options.append({"label": "💾 Save & Advance to DISCOVER", "value": "save_5_goals"})
+
+        options.append({"label": "📱 Open WebApp Checklist (Fast)", "value": "open_webapp", "url": webapp_url})
+
+        # Offer quick popular career pathway options
+        sample_pathways = [
+            "Honest & effective-IAS/IPS/IFS/Central Civil Services",
+            "Judges in Supreme Court & High Court/Attorney General of India",
+            "AI, Data Science, Quantum Tech, Biotech, Bioengineering, Robotics",
+            "Global CEOs/CTOs/COOs of Top Companies of the World",
+            "Nobel Laureates",
+            "Unicorn Companies",
+            "Professors in Top Ranking Global Universities",
+            "Top firms of India - Law / Chartered Accountancy",
+        ]
+        for p in sample_pathways:
+            is_sel = p in selected_goals
+            prefix = "❌ Remove: " if is_sel else "➕ Add: "
+            short_lbl = p[:25] + "..." if len(p) > 28 else p
+            short_key = p[:15].strip()
+            options.append({
+                "label": f"{prefix}{short_lbl}",
+                "value": f"toggle_goal_{short_key}",
+            })
+
+        options.append({"label": "🔙 Back to Main Menu", "value": "menu"})
+
+        return {
+            "title": "Stage 1: DREAM",
+            "prompt": prompt,
+            "sso_url": webapp_url,
+            "options": options[:10],
         }
 
     # --- 5. Chosen Career & Commitment (Stage 3: DECIDE) ---
