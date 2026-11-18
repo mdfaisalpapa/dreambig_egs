@@ -8,28 +8,45 @@ from dreambig_egs.api.utils import portal_api
 
 @frappe.whitelist(allow_guest=True)
 @portal_api
-def get_student_menu(for_user: str = None) -> dict:
+def get_student_menu(for_user: str = None, channel: str = None) -> dict:
     """
     Returns the dynamically tailored menu for the student participant based on their
     active 5Ds stage (DREAM, DISCOVER, DECIDE, DEVELOP, DELIVER), event attendance,
     and Follow-Up Check-In status.
 
     :param for_user: Student email or student ID
+    :param channel: Optional channel type ('whatsapp', 'telegram')
     """
     user_key = (for_user or "").strip()
+    channel_key = (channel or "").strip().lower()
 
     # Unauthenticated / Guest state (Layer 1: Register in the room)
     if not user_key or user_key.lower() in ("guest", "none", "null", "undefined"):
         reg_url = f"{get_url()}/egs-student-participant/new"
-        return {
-            "authenticated": False,
-            "welcome_message": (
+
+        if channel_key in ("whatsapp", "wa"):
+            welcome_msg = (
+                "🎓 *Welcome to Dream Big Early Goal Setting (EGS)!*\n\n"
+                "🌟 _No student should be left unguided and be left behind._\n\n"
+                "Your mobile number is not registered with EGS. Please tap *📝 Register for EGS* below to join the first-year cohort:"
+            )
+            options = [
+                {
+                    "id": "register",
+                    "label": "📝 Register for EGS",
+                    "desc": "Join First-Year Cohort",
+                    "action": "register",
+                    "url": reg_url,
+                }
+            ]
+        else:
+            welcome_msg = (
                 "🎓 *Welcome to Dream Big Early Goal Setting (EGS)!*\n\n"
                 "🌟 _No student should be left unguided and be left behind._\n\n"
                 "Please tap *📱 Share Contact to Login* below to link your student profile, "
                 "or register if you are new:"
-            ),
-            "options": [
+            )
+            options = [
                 {
                     "id": "share_contact",
                     "label": "📱 Share Contact to Login",
@@ -44,8 +61,13 @@ def get_student_menu(for_user: str = None) -> dict:
                     "action": "register",
                     "url": reg_url,
                 },
-            ],
-            "count": 2,
+            ]
+
+        return {
+            "authenticated": False,
+            "welcome_message": welcome_msg,
+            "options": options,
+            "count": len(options),
         }
 
     # Locate student participant

@@ -76,7 +76,7 @@ def resolve_chat_user(channel: str, channel_user_id: str, phone_number: str = No
 
     # 2. Lookup existing binding by telegram_chat_id or phone match (for WhatsApp)
     student_doc = None
-    if channel_norm == "Telegram":
+    if channel_norm.lower() == "telegram":
         students = frappe.get_all(
             "EGS Student Participant",
             filters={"telegram_chat_id": user_id_norm},
@@ -85,8 +85,10 @@ def resolve_chat_user(channel: str, channel_user_id: str, phone_number: str = No
         )
         if students:
             student_doc = students[0]
-    elif channel_norm == "WhatsApp":
-        clean_wa = re.sub(r"\D", "", user_id_norm)
+    elif channel_norm.lower() in ("whatsapp", "wa"):
+        # Match against either incoming user_id or provided phone_number
+        target_phone = str(phone_number or user_id_norm or "")
+        clean_wa = re.sub(r"\D", "", target_phone)
         phone_10 = clean_wa[-10:] if len(clean_wa) >= 10 else clean_wa
         if len(phone_10) >= 10:
             students = frappe.get_all(
